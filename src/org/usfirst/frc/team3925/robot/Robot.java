@@ -32,8 +32,8 @@ import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_RIGHT_ENCODER_B;
 import org.usfirst.frc.team3925.robot.subsystem.Drive;
 import org.usfirst.frc.team3925.robot.subsystem.Elevator;
 import org.usfirst.frc.team3925.robot.subsystem.Rollers;
-import org.usfirst.frc.team3925.robot.subsystem.Rumble;
 import org.usfirst.frc.team3925.robot.util.Button;
+import org.usfirst.frc.team3925.robot.util.Rumble;
 import org.usfirst.frc.team3925.robot.util.ToggleButton;
 
 import edu.wpi.first.wpilibj.IterativeRobot;
