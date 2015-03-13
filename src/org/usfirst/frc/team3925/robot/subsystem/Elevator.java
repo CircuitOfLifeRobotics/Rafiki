@@ -5,9 +5,15 @@ package org.usfirst.frc.team3925.robot.subsystem;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Talon;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Elevator {
+	
+	public enum State {
+		IDLE, RESET,
+		LIFT_INIT, LIFT_WAIT_DOWN, LIFT_WAIT_UP,
+		LOWER_INIT, LOWER_WAIT_DOWN;
+	}
+	
 	
 	//sets constants
 	private static final double MAX_ELEVATOR_HEIGHT = 13.25;
@@ -16,30 +22,21 @@ public class Elevator {
 	private static final double DOWN_SPEED = 1d;
 	private static final double TOTE_HEIGHT = 13.500001;
 	private static double elevatorEncoderOffset = 0;
-	private static final int STATE_IDLE = 0;
-	private static final int STATE_LIFT_INIT = 1;
-	private static final int STATE_LIFT_WAIT_DOWN = 2;
-	private static final int STATE_LIFT_WAIT_UP = 3;
-	private static final int STATE_LOWER_INIT = 9;
-	private static final int STATE_LOWER_WAIT_DOWN = 10;
-	private static final int STATE_RESET = 15;
 
 	//vital variables
 	double targetHeight = 0;
-	int state = 0;
+	State state = State.IDLE;
 	
 	Talon leftElevatorMotor;
 	Talon rightElevatorMotor;
 	Encoder elevatorEncoder;
 	DigitalInput limitSwitch1;
-	//DigitalInput limitSwitch2;
 	
 	public Elevator(int leftelevatormotor, int rightelevatormotor, int encoderportA, int encoderportB, int limitswitchport1, int limitswitchport2) {
 		leftElevatorMotor = new Talon(leftelevatormotor);
 		rightElevatorMotor = new Talon(rightelevatormotor);
 		elevatorEncoder = new Encoder(encoderportA, encoderportB);
 		limitSwitch1 = new DigitalInput(limitswitchport1);
-		//limitSwitch2 = new DigitalInput(limitswitchport2);
 		//inches per revolution
 		elevatorEncoder.setDistancePerPulse(4.25/2048);
 	}
@@ -79,61 +76,66 @@ public class Elevator {
 	
 	//state machine that runs the elevator
 	public void elevatorRun() {// no activity
-		if (state == STATE_IDLE) {
+		switch (state) {
+		case IDLE:
 			targetHeight = getCurrentHeight();
-		}else if (state == STATE_LIFT_INIT) {// initializes lift sequence
+			break;
+		case LIFT_INIT:
 			targetHeight = 0;
-			state++;
-		}else if (state == STATE_LIFT_WAIT_DOWN) {// runs during lift sequence
+			state = State.LIFT_WAIT_DOWN;
+		case LIFT_WAIT_DOWN:
 			if (Math.abs(getCurrentHeight()-targetHeight) < TOLERANCE) {
 				targetHeight = TOTE_HEIGHT;
-				state = STATE_LIFT_WAIT_UP;
+				state = State.LIFT_WAIT_UP;
 			}
-		}else if (state == STATE_LIFT_WAIT_UP) {
+			break;
+		case LIFT_WAIT_UP:
 			if (Math.abs(getCurrentHeight()-targetHeight) < TOLERANCE) {
-				state = STATE_IDLE;
+				state = State.IDLE;
 			}
-		}else if (state == STATE_LOWER_INIT) {// initializes lower sequence
+			break;
+		case LOWER_INIT:
 			targetHeight = 0;
-			state++;
-		}else if (state == STATE_LOWER_WAIT_DOWN) {// runs during lower sequence
+			state = State.LOWER_WAIT_DOWN;
+		case LOWER_WAIT_DOWN:
 			if (Math.abs(getCurrentHeight()-targetHeight) < TOLERANCE) {
-				state = STATE_IDLE;
+				state = State.IDLE;
 			}
-		}else if (state == STATE_RESET) {// resets the height to 0 (where 0 is really offsetted from the actual 0 by elevatorEncoderOffset)
+			break;
+		case RESET:
 			if (Math.abs(getCurrentHeight()-targetHeight) < TOLERANCE) {
 				targetHeight = 0;
 				elevatorEncoderOffset = 0;
-				state = STATE_LIFT_INIT;
+				state = State.LIFT_WAIT_UP;
 			}
 			if (!limitSwitch1.get()/* || !limitSwitch2.get()*/) {
 				elevatorEncoder.reset();
 				targetHeight = 0;
-				state = STATE_LIFT_INIT;
+				state = State.LIFT_WAIT_UP;
 			}
+			
 		}
-		SmartDashboard.putNumber("elevator state", state);
-		updateHeight(targetHeight, state != STATE_RESET);
+		updateHeight(targetHeight, state != State.RESET);
 	}
 	
 	//resets the height to 0
 	public void zeroElevator() {
 		targetHeight = -1.2 * MAX_ELEVATOR_HEIGHT;
-    	state = STATE_RESET;
+    	state = State.RESET;
 	}
 	
 	//lifts the elevator to tote height
 	public void liftStack() {
-		state = STATE_LIFT_INIT;
+		state = State.LIFT_INIT;
 	}
 	
 	//lowers the elevator to 0
 	public void lowerStack() {
-		state = STATE_LOWER_INIT;
+		state = State.LOWER_INIT;
 	}
 
 	public void idle() {
-		state = STATE_IDLE;
+		state = State.IDLE;
 	}
 	
 }
