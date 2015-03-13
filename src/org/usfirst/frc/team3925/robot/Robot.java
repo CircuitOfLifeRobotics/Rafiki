@@ -26,7 +26,6 @@ import static org.usfirst.frc.team3925.robot.RobotMap.ELEVATOR_SWITCH_2;
 import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_ROLLER;
 import static org.usfirst.frc.team3925.robot.RobotMap.JOYSTICK_XBOX_DRIVER;
 import static org.usfirst.frc.team3925.robot.RobotMap.JOYSTICK_XBOX_SHOOTER;
-import static org.usfirst.frc.team3925.robot.RobotMap.LATCH_PORT;
 import static org.usfirst.frc.team3925.robot.RobotMap.LEFT_DRIVE_ENCODER_A;
 import static org.usfirst.frc.team3925.robot.RobotMap.LEFT_DRIVE_ENCODER_B;
 import static org.usfirst.frc.team3925.robot.RobotMap.PCM_CAN_ID;
@@ -35,7 +34,6 @@ import static org.usfirst.frc.team3925.robot.RobotMap.RIGHT_DRIVE_ENCODER_B;
 
 import org.usfirst.frc.team3925.robot.subsystem.Drive;
 import org.usfirst.frc.team3925.robot.subsystem.Elevator;
-import org.usfirst.frc.team3925.robot.subsystem.Latches;
 import org.usfirst.frc.team3925.robot.subsystem.Rollers;
 import org.usfirst.frc.team3925.robot.subsystem.Rumble;
 import org.usfirst.frc.team3925.robot.util.Button;
@@ -63,7 +61,6 @@ public class Robot extends IterativeRobot {
 	Drive drive;
 	Elevator elevator;
 	Rollers intake;
-	Latches latches;
 	Rumble rumble;
 	
 	Joystick driverXbox;
@@ -91,8 +88,7 @@ public class Robot extends IterativeRobot {
     	
     	timer = new Timer();
     	drive = new Drive(DRIVE_LEFT_MOTOR, DRIVE_RIGHT_MOTOR, PCM_CAN_ID, DRIVE_SOLENOID_A, DRIVE_SOLENOID_B, LEFT_DRIVE_ENCODER_A, LEFT_DRIVE_ENCODER_B, RIGHT_DRIVE_ENCODER_A, RIGHT_DRIVE_ENCODER_B);
-    	latches = new Latches(LATCH_PORT);
-    	elevator = new Elevator(ELEVATOR_LEFT_TALON, ELEVATOR_RIGHT_TALON, ELEVATOR_ENCODER_A, ELEVATOR_ENCODER_B, ELEVATOR_SWITCH_1, ELEVATOR_SWITCH_2, latches);
+    	elevator = new Elevator(ELEVATOR_LEFT_TALON, ELEVATOR_RIGHT_TALON, ELEVATOR_ENCODER_A, ELEVATOR_ENCODER_B, ELEVATOR_SWITCH_1, ELEVATOR_SWITCH_2);
     	intake = new Rollers(INTAKE_ROLLER);
     	
     	shooterXbox = new Joystick(JOYSTICK_XBOX_SHOOTER);

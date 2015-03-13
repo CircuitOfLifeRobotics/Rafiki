@@ -34,7 +34,7 @@ public class Elevator {
 	DigitalInput limitSwitch1;
 	//DigitalInput limitSwitch2;
 	
-	public Elevator(int leftelevatormotor, int rightelevatormotor, int encoderportA, int encoderportB, int limitswitchport1, int limitswitchport2, Latches latche) {
+	public Elevator(int leftelevatormotor, int rightelevatormotor, int encoderportA, int encoderportB, int limitswitchport1, int limitswitchport2) {
 		leftElevatorMotor = new Talon(leftelevatormotor);
 		rightElevatorMotor = new Talon(rightelevatormotor);
 		elevatorEncoder = new Encoder(encoderportA, encoderportB);
