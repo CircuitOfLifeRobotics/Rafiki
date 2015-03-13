@@ -2,12 +2,12 @@ package org.usfirst.frc.team3925.robot.subsystem;
 
 import edu.wpi.first.wpilibj.Victor;
 
-public class UpperArms {
+public class IntakeArms {
 	
 	Victor rightArm;
 	Victor leftArm;
 	
-	public UpperArms(int leftPort, int rightPort) {
+	public IntakeArms(int leftPort, int rightPort) {
 		leftArm = new Victor(leftPort);
 		rightArm = new Victor(rightPort);
 	}
