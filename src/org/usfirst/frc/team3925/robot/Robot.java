@@ -13,7 +13,6 @@
 
 package org.usfirst.frc.team3925.robot;
 
-import static org.usfirst.frc.team3925.robot.RobotMap.CAMERA_IP;
 import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_LEFT_MOTOR;
 import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_RIGHT_MOTOR;
 import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_SOLENOID_A;
@@ -22,10 +21,9 @@ import static org.usfirst.frc.team3925.robot.RobotMap.ELEVATOR_ENCODER_A;
 import static org.usfirst.frc.team3925.robot.RobotMap.ELEVATOR_ENCODER_B;
 import static org.usfirst.frc.team3925.robot.RobotMap.ELEVATOR_LEFT_TALON;
 import static org.usfirst.frc.team3925.robot.RobotMap.ELEVATOR_RIGHT_TALON;
-import static org.usfirst.frc.team3925.robot.RobotMap.ELEVATOR_SWITCH;
+import static org.usfirst.frc.team3925.robot.RobotMap.ELEVATOR_SWITCH_1;
+import static org.usfirst.frc.team3925.robot.RobotMap.ELEVATOR_SWITCH_2;
 import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_ROLLER;
-import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_VICTOR_LEFT;
-import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_VICTOR_RIGHT;
 import static org.usfirst.frc.team3925.robot.RobotMap.JOYSTICK_XBOX_DRIVER;
 import static org.usfirst.frc.team3925.robot.RobotMap.JOYSTICK_XBOX_SHOOTER;
 import static org.usfirst.frc.team3925.robot.RobotMap.LATCH_PORT;
@@ -35,16 +33,18 @@ import static org.usfirst.frc.team3925.robot.RobotMap.PCM_CAN_ID;
 import static org.usfirst.frc.team3925.robot.RobotMap.RIGHT_DRIVE_ENCODER_A;
 import static org.usfirst.frc.team3925.robot.RobotMap.RIGHT_DRIVE_ENCODER_B;
 
-import com.ni.vision.NIVision;
-import com.ni.vision.NIVision.DrawMode;
-import com.ni.vision.NIVision.Image;
-import com.ni.vision.NIVision.ShapeMode;
+import org.usfirst.frc.team3925.robot.subsystem.Drive;
+import org.usfirst.frc.team3925.robot.subsystem.Elevator;
+import org.usfirst.frc.team3925.robot.subsystem.Latches;
+import org.usfirst.frc.team3925.robot.subsystem.Rollers;
+import org.usfirst.frc.team3925.robot.subsystem.Rumble;
+import org.usfirst.frc.team3925.robot.util.Button;
+import org.usfirst.frc.team3925.robot.util.ToggleButton;
 
-import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.vision.AxisCamera;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -57,22 +57,22 @@ public class Robot extends IterativeRobot {
 	
 	int wait = 0;
 	
-	public static final double AUTONOMOUS_DISTANCE = 10;
+	public static final double AUTONOMOUS_DISTANCE = 50;
 	
-//	AxisCamera camera;
+	Timer timer;
 	Drive drive;
 	Elevator elevator;
-	Intake intake;
+	Rollers intake;
 	Latches latches;
 	Rumble rumble;
 	
 	Joystick driverXbox;
 	Joystick shooterXbox;
-	ToggleButton gearToggle;
 	ToggleButton manualElevatorToggle;
 	Button zeroElevatorBtn;
 	Button liftToteBtn;
 	Button lowerToteBtn;
+	Button stopElevatorBtn;
 	
 	private final double DEADZONE = 0.1;
 	double leftDistanceDriven;
@@ -80,28 +80,28 @@ public class Robot extends IterativeRobot {
 	double leftSpeed;
 	double rightSpeed;
 	
-	Image frame;
+	private static double LOW_GEAR_COEFFICIENT = 0.4;
+	private static double HIGH_GEAR_COEFFICIENT = 1;
 	
     /**
      * This function is run when the robot is first started up and should be
      * used for any initialization code.
      */
     public void robotInit() {
-    	frame = NIVision.imaqCreateImage(NIVision.ImageType.IMAGE_RGB, 0);
     	
-//    	camera = new AxisCamera(CAMERA_IP);
+    	timer = new Timer();
     	drive = new Drive(DRIVE_LEFT_MOTOR, DRIVE_RIGHT_MOTOR, PCM_CAN_ID, DRIVE_SOLENOID_A, DRIVE_SOLENOID_B, LEFT_DRIVE_ENCODER_A, LEFT_DRIVE_ENCODER_B, RIGHT_DRIVE_ENCODER_A, RIGHT_DRIVE_ENCODER_B);
     	latches = new Latches(LATCH_PORT);
-    	elevator = new Elevator(ELEVATOR_LEFT_TALON, ELEVATOR_RIGHT_TALON, ELEVATOR_ENCODER_A, ELEVATOR_ENCODER_B, ELEVATOR_SWITCH, latches);
-    	intake = new Intake(INTAKE_VICTOR_LEFT, INTAKE_VICTOR_RIGHT, INTAKE_ROLLER);
+    	elevator = new Elevator(ELEVATOR_LEFT_TALON, ELEVATOR_RIGHT_TALON, ELEVATOR_ENCODER_A, ELEVATOR_ENCODER_B, ELEVATOR_SWITCH_1, ELEVATOR_SWITCH_2, latches);
+    	intake = new Rollers(INTAKE_ROLLER);
     	
     	shooterXbox = new Joystick(JOYSTICK_XBOX_SHOOTER);
     	driverXbox = new Joystick(JOYSTICK_XBOX_DRIVER);
-    	gearToggle = new ToggleButton(driverXbox, 1);
     	manualElevatorToggle = new ToggleButton(shooterXbox, 8 /* start */);
     	zeroElevatorBtn = new Button(shooterXbox, 2);
     	liftToteBtn = new Button(shooterXbox, 1);
     	lowerToteBtn = new Button(shooterXbox, 4);
+    	stopElevatorBtn = new Button(shooterXbox, 3);
     	
     	leftDistanceDriven = 0;
     	rightDistanceDriven = 0;
@@ -109,25 +109,24 @@ public class Robot extends IterativeRobot {
 
     public void autonomousInit() {
     	elevator.zeroElevator();
-    	gearToggle.reset();
     	drive.resetLeftEncoder();
     	drive.resetRightEncoder();
-    	elevator.liftStack();
+    	timer.reset();
+    	timer.start();
     }
     
     /**
      * This function is called periodically during autonomous
      */
     public void autonomousPeriodic() {
-    	leftDistanceDriven = drive.getLeftEncoder();
-    	rightDistanceDriven = drive.getRightEncoder();
-    	leftSpeed = (AUTONOMOUS_DISTANCE - leftDistanceDriven) / 6;
-    	rightSpeed = (AUTONOMOUS_DISTANCE - rightDistanceDriven) / 6;
-//    	if (leftSpeed > 1)
-//    		leftSpeed = 1;
-//    	if (rightSpeed > 1) 
-//    		rightSpeed = 1;   Possibly don't need?
-    	drive.setMotorOutputs(leftSpeed, rightSpeed);
+    	
+    	if (timer.get() < 3) {
+    		drive.setMotorOutputs(0.75, 0.75);
+    	} else {
+    		drive.setMotorOutputs(0, 0);
+    	}
+    	
+    	elevator.elevatorRun();
     }
     
     /**
@@ -135,12 +134,12 @@ public class Robot extends IterativeRobot {
      */
     public void teleopInit() {
     	//elevator.zeroElevator();
-    	gearToggle.reset();
     	manualElevatorToggle.reset();
-    	//elevator.liftStack();
     	
     	drive.resetLeftEncoder();
     	drive.resetRightEncoder();
+    	
+    	elevator.idle();
     }
 
     /**
@@ -152,19 +151,7 @@ public class Robot extends IterativeRobot {
 		SmartDashboard.putNumber("elevator height", elevator.getCurrentHeight());
     	elevatorPeriodic();
     	intakePeriodic();
-//    	cameraPeriodic(); disabled, camera commented out
     	
-    }
-    
-    public void cameraPeriodic() {
-    	NIVision.Rect rect = new NIVision.Rect(10, 10, 100, 100);
-        if (isOperatorControl() && isEnabled()) {
-
-//            camera.getImage(frame);
-            NIVision.imaqDrawShapeOnImage(frame, frame, rect, DrawMode.DRAW_VALUE, ShapeMode.SHAPE_OVAL, 0.0f);
-
-            CameraServer.getInstance().setImage(frame);
-        }
     }
     
 	/**
@@ -178,7 +165,7 @@ public class Robot extends IterativeRobot {
 			elevator.idle();
 			
 			double elevatorSpeed = -shooterXbox.getRawAxis(1);
-			elevator.setElevatorSpeed(elevatorSpeed, true);
+			elevator.setElevatorSpeed(elevatorSpeed, false);
 		} else {
 			if (lowerToteBtn.get()) {
 				elevator.lowerStack();
@@ -189,6 +176,9 @@ public class Robot extends IterativeRobot {
 			if (zeroElevatorBtn.get()) {
 				SmartDashboard.putBoolean("zero'd", true);
 				elevator.zeroElevator();
+			}
+			if (stopElevatorBtn.get()) {
+				elevator.idle();
 			}
 			elevator.elevatorRun();
 		}
@@ -208,14 +198,25 @@ public class Robot extends IterativeRobot {
     	if (Math.abs(rotateValue) < DEADZONE)
     		rotateValue = 0;
     	
-    	gearToggle.update();
-    	boolean gear = gearToggle.get();
+    	double maxOutput;
+    	boolean gear1 = driverXbox.getRawButton(5);
+    	boolean gear2 = driverXbox.getRawButton(6);
     	
-		drive.drive(moveValue, rotateValue, gear);
+    	if (gear1 || gear2) {
+    		maxOutput = HIGH_GEAR_COEFFICIENT;
+    	} else {
+    		maxOutput = LOW_GEAR_COEFFICIENT;
+    	}
+    	
+		drive.drive(moveValue, rotateValue, maxOutput);
 	}
     
     @Override
     public void disabledInit() {
-    	drive.drive(0, 0, gearToggle.get());
+    	drive.drive(0, 0, LOW_GEAR_COEFFICIENT);
+    }
+    
+    @Override
+    public void disabledPeriodic() {
     }
 }
