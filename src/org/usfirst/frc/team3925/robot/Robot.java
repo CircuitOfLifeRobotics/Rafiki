@@ -24,10 +24,10 @@ import static org.usfirst.frc.team3925.robot.RobotMap.ELEVATOR_SWITCH_2;
 import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_ROLLER;
 import static org.usfirst.frc.team3925.robot.RobotMap.JOYSTICK_XBOX_DRIVER;
 import static org.usfirst.frc.team3925.robot.RobotMap.JOYSTICK_XBOX_SHOOTER;
-import static org.usfirst.frc.team3925.robot.RobotMap.LEFT_DRIVE_ENCODER_A;
-import static org.usfirst.frc.team3925.robot.RobotMap.LEFT_DRIVE_ENCODER_B;
-import static org.usfirst.frc.team3925.robot.RobotMap.RIGHT_DRIVE_ENCODER_A;
-import static org.usfirst.frc.team3925.robot.RobotMap.RIGHT_DRIVE_ENCODER_B;
+import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_LEFT_ENCODER_A;
+import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_LEFT_ENCODER_B;
+import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_RIGHT_ENCODER_A;
+import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_RIGHT_ENCODER_B;
 
 import org.usfirst.frc.team3925.robot.subsystem.Drive;
 import org.usfirst.frc.team3925.robot.subsystem.Elevator;
@@ -84,7 +84,7 @@ public class Robot extends IterativeRobot {
     public void robotInit() {
     	
     	timer = new Timer();
-    	drive = new Drive(DRIVE_LEFT_MOTOR, DRIVE_RIGHT_MOTOR, LEFT_DRIVE_ENCODER_A, LEFT_DRIVE_ENCODER_B, RIGHT_DRIVE_ENCODER_A, RIGHT_DRIVE_ENCODER_B);
+    	drive = new Drive(DRIVE_LEFT_MOTOR, DRIVE_RIGHT_MOTOR, DRIVE_LEFT_ENCODER_A, DRIVE_LEFT_ENCODER_B, DRIVE_RIGHT_ENCODER_A, DRIVE_RIGHT_ENCODER_B);
     	elevator = new Elevator(ELEVATOR_LEFT_TALON, ELEVATOR_RIGHT_TALON, ELEVATOR_ENCODER_A, ELEVATOR_ENCODER_B, ELEVATOR_SWITCH_1, ELEVATOR_SWITCH_2);
     	intake = new Rollers(INTAKE_ROLLER);
     	
