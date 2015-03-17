@@ -5,6 +5,8 @@ import edu.wpi.first.wpilibj.RobotDrive;
 
 public class Drive {
 	
+	public static final double WHEELBASE_SIZE = 27; // inches
+	
 	RobotDrive drive;
 	Encoder leftEncoder;
 	Encoder rightEncoder;
@@ -31,12 +33,12 @@ public class Drive {
 		drive.setLeftRightMotorOutputs(leftSpeed, rightSpeed);
 	}
 	
-	public double getLeftEncoder() {
+	public double getLeftDistance() {
 		return leftEncoder.getDistance();
 	}
 	
-	public double getRightEncoder() {
-		return rightEncoder.getDistance();
+	public double getRightDistance() {
+		return -rightEncoder.getDistance();
 	}
 	
 	public void resetLeftEncoder() {

@@ -29,6 +29,9 @@ import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_LEFT_ENCODER_B;
 import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_RIGHT_ENCODER_A;
 import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_RIGHT_ENCODER_B;
 
+import org.usfirst.frc.team3925.robot.command.CommandListExecutor;
+import org.usfirst.frc.team3925.robot.command.DriveDistance;
+import org.usfirst.frc.team3925.robot.command.TurnDriveEncoder;
 import org.usfirst.frc.team3925.robot.subsystem.Drive;
 import org.usfirst.frc.team3925.robot.subsystem.Elevator;
 import org.usfirst.frc.team3925.robot.subsystem.Rollers;
@@ -59,6 +62,8 @@ public class Robot extends IterativeRobot {
 	Elevator elevator;
 	Rollers intake;
 	Rumble rumble;
+	
+	CommandListExecutor<Drive> autonomousDriveCommandList;
 	
 	Joystick driverXbox;
 	Joystick shooterXbox;
@@ -96,14 +101,14 @@ public class Robot extends IterativeRobot {
     	lowerToteBtn = new Button(shooterXbox, 4);
     	stopElevatorBtn = new Button(shooterXbox, 3);
     	
-    	leftDistanceDriven = 0;
-    	rightDistanceDriven = 0;
+    	autonomousDriveCommandList = new CommandListExecutor<Drive>(
+    			new DriveDistance(72, .5),
+    			new TurnDriveEncoder(180, .5));
     }
 
     public void autonomousInit() {
     	elevator.zeroElevator();
-    	drive.resetLeftEncoder();
-    	drive.resetRightEncoder();
+    	autonomousDriveCommandList.reset();
     	timer.reset();
     	timer.start();
     }
@@ -112,12 +117,8 @@ public class Robot extends IterativeRobot {
      * This function is called periodically during autonomous
      */
     public void autonomousPeriodic() {
-    	
-    	if (timer.get() < 3) {
-    		drive.setMotorOutputs(0.75, 0.75);
-    	} else {
-    		drive.setMotorOutputs(0, 0);
-    	}
+
+    	autonomousDriveCommandList.execute(drive);
     	
     	elevator.elevatorRun();
     }
