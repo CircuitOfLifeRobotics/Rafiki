@@ -203,6 +203,9 @@ public class Robot extends IterativeRobot {
     	}
     	
 		drive.drive(moveValue, rotateValue, maxOutput);
+		
+		SmartDashboard.putNumber("left drive encoder", drive.getLeftDistance());
+		SmartDashboard.putNumber("right drive encoder", drive.getRightDistance());
 	}
     
     @Override
