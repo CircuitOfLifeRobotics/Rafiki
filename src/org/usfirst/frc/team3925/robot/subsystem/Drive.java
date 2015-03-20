@@ -15,8 +15,8 @@ public class Drive {
 		drive = new RobotDrive(leftmotorport, rightmotorport);
 		leftEncoder = new Encoder(leftencoderportA, leftencoderportB);
 		rightEncoder = new Encoder(rightencoderportA, rightencoderportB);
-		leftEncoder.setDistancePerPulse(4*Math.PI / 3d / 128d);
-		rightEncoder.setDistancePerPulse(4*Math.PI / 3d / 128d);
+		leftEncoder.setDistancePerPulse(120/9127d);
+		rightEncoder.setDistancePerPulse(120/9127d); // determined by pushing the robot 10 feet.
 	}
 	
 	public void drive(double fwd, double turn, double maxOutput) {
@@ -38,7 +38,7 @@ public class Drive {
 	}
 	
 	public double getRightDistance() {
-		return -rightEncoder.getDistance();
+		return rightEncoder.getDistance();
 	}
 	
 	public void resetLeftEncoder() {
