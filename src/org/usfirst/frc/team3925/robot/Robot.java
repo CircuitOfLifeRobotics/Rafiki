@@ -79,7 +79,7 @@ public class Robot extends IterativeRobot {
 	double leftSpeed;
 	double rightSpeed;
 	
-	private static double LOW_GEAR_COEFFICIENT = 0.4;
+	private static double LOW_GEAR_COEFFICIENT = 0.5;
 	private static double HIGH_GEAR_COEFFICIENT = 1;
 	
     /**
@@ -102,12 +102,12 @@ public class Robot extends IterativeRobot {
     	stopElevatorBtn = new Button(shooterXbox, 3);
     	
     	autonomousDriveCommandList = new CommandListExecutor<Drive>(
-    			new DriveDistance(72, .5),
-    			new TurnDriveEncoder(180, .5));
+    			new DriveDistance(72, 1),
+    			new TurnDriveEncoder(45, 1));
     }
 
     public void autonomousInit() {
-    	elevator.zeroElevator();
+    	//elevator.zeroElevator();
     	autonomousDriveCommandList.reset();
     	timer.reset();
     	timer.start();
@@ -120,7 +120,7 @@ public class Robot extends IterativeRobot {
 
     	autonomousDriveCommandList.execute(drive);
     	
-    	elevator.elevatorRun();
+    	//elevator.elevatorRun();
     }
     
     /**
@@ -128,12 +128,12 @@ public class Robot extends IterativeRobot {
      */
     public void teleopInit() {
     	//elevator.zeroElevator();
-    	manualElevatorToggle.reset();
+    	//manualElevatorToggle.reset();
     	
     	drive.resetLeftEncoder();
     	drive.resetRightEncoder();
     	
-    	elevator.idle();
+    	//elevator.idle();
     }
 
     /**
@@ -143,7 +143,7 @@ public class Robot extends IterativeRobot {
     	
     	drivePeriodic();
 		SmartDashboard.putNumber("elevator height", elevator.getCurrentHeight());
-    	elevatorPeriodic();
+    	//elevatorPeriodic();
     	intakePeriodic();
     	
     }
