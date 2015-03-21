@@ -2,7 +2,7 @@ package org.usfirst.frc.team3925.robot.command;
 
 import edu.wpi.first.wpilibj.Timer;
 
-public class Wait implements Command {
+public class Wait implements Command<Object> {
 	
 	double time;
 	Timer timer;
