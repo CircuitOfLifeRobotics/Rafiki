@@ -76,10 +76,20 @@ public class Robot extends IterativeRobot {
 	Joystick driverXbox;
 	Joystick shooterXbox;
 	ToggleButton manualElevatorToggle;
+	// do we need elevator buttons as well if we are going to have intake buttons?
+	// should we make it so that there is only one toggle button for both the elevator and the intake?
 	Button zeroElevatorBtn;
 	Button liftToteBtn;
 	Button lowerToteBtn;
 	Button stopElevatorBtn;
+	//new buttons
+	ToggleButton manualIntakeToggle;
+	ToggleButton armPnuematicsToggle;
+	Button intakeBinBtn;
+	Button intakeToteBtn;
+	Button ejectStackBtn;
+	Button stopIntakeBtn;
+	//end new buttons
 	
 	private final double DEADZONE = 0.1;
 	double leftDistanceDriven;
@@ -108,6 +118,14 @@ public class Robot extends IterativeRobot {
     	liftToteBtn = new Button(shooterXbox, 1);
     	lowerToteBtn = new Button(shooterXbox, 4);
     	stopElevatorBtn = new Button(shooterXbox, 3);
+    	// new code
+    	manualIntakeToggle = new ToggleButton(shooterXbox, 7);
+    	armPnuematicsToggle = new ToggleButton(shooterXbox, 0 /*I DON'T KNOW YET*/);
+    	intakeBinBtn = new Button(shooterXbox, 0 /*I DON'T KNOW YET*/);
+    	intakeToteBtn = new Button(shooterXbox, 0 /*I DON'T KNOW YET*/);
+    	ejectStackBtn = new Button(shooterXbox, 0/*I DON'T KNOW YET*/);
+    	stopIntakeBtn = new Button(shooterXbox, 0 /*I DON'T KNOW YET*/);
+    	//end new code
     	
     	autonomousDriveCommandList = new CommandListExecutor<Drive>(
     			new DriveDistance(72, 1),
@@ -115,7 +133,7 @@ public class Robot extends IterativeRobot {
     }
 
     public void autonomousInit() {
-    	//elevator.zeroElevator();
+    	//elevator.zeroElevator(); elevator not built yet
     	autonomousDriveCommandList.reset();
     	timer.reset();
     	timer.start();
@@ -128,20 +146,20 @@ public class Robot extends IterativeRobot {
 
     	autonomousDriveCommandList.execute(drive);
     	
-    	//elevator.elevatorRun();
+    	//elevator.elevatorRun(); elevator not built yet
     }
     
     /**
      * This function is called at the beginning of teleop
      */
     public void teleopInit() {
-    	//elevator.zeroElevator();
-    	//manualElevatorToggle.reset();
+    	//elevator.zeroElevator(); elevator not built yet
+    	//manualElevatorToggle.reset(); elevator not built yet
     	
     	drive.resetLeftEncoder();
     	drive.resetRightEncoder();
     	
-    	//elevator.idle();
+    	//elevator.idle(); elevator not built yet
     }
 
     /**
@@ -150,8 +168,7 @@ public class Robot extends IterativeRobot {
     public void teleopPeriodic() {
     	
     	drivePeriodic();
-		SmartDashboard.putNumber("elevator height", elevator.getCurrentHeight());
-    	//elevatorPeriodic();
+    	//elevatorPeriodic(); elevator not built yet
     	intakePeriodic();
     	
     }
@@ -187,14 +204,38 @@ public class Robot extends IterativeRobot {
 	}
 	
 	private void intakePeriodic() {
-		double rollerSpeed = shooterXbox.getRawAxis(2) - shooterXbox.getRawAxis(3);
-		intake.setRollerSpeed(rollerSpeed);
+		manualIntakeToggle.update();
 		
-		double frontArmSpeed = shooterXbox.getRawAxis(1);
-		intake.setFrontArmSpeeds(frontArmSpeed);
-		
-		double backArmSpeed = shooterXbox.getRawAxis(5);
-		intake.setBackArmSpeeds(backArmSpeed);
+		if (manualIntakeToggle.get()) {
+			armPnuematicsToggle.update();
+			
+			double rollerSpeed = shooterXbox.getRawAxis(2) - shooterXbox.getRawAxis(3);
+			intake.setRollerSpeed(rollerSpeed);
+			
+			double frontArmSpeed = shooterXbox.getRawAxis(3);
+			intake.setFrontArmSpeeds(frontArmSpeed);
+			
+			double backArmSpeed = shooterXbox.getRawAxis(4);
+			intake.setBackArmSpeeds(backArmSpeed);
+		} else {
+			//new code
+			if (intakeBinBtn.get()) {
+				
+			}
+			if (intakeToteBtn.get()) {
+				
+			}
+			if (ejectStackBtn.get()) {
+				
+			}
+			if (stopIntakeBtn.get()) {
+				intake.setBackArmSpeeds(0);
+				intake.setFrontArmSpeeds(0);
+				intake.setRollerSpeed(0);
+				intake.setArmSolenoids(false, false);
+			}
+			//end new code
+		}
 	}
 	
 	private void drivePeriodic() {
