@@ -1,19 +1,23 @@
-//         .----------------.  .----------------.  .----------------.  .----------------. 
-//        | .--------------. || .--------------. || .--------------. || .--------------. |
-//        | |    ______    | || |    ______    | || |    _____     | || |   _______    | |
-//        | |   / ____ `.  | || |  .' ____ '.  | || |   / ___ `.   | || |  |  _____|   | |
-//        | |   `'  __) |  | || |  | (____) |  | || |  |_/___) |   | || |  | |____     | |
-//        | |   _  |__ '.  | || |  '_.____. |  | || |   .'____.'   | || |  '_.____''.  | |
-//        | |  | \____) |  | || |  | \____| |  | || |  / /____     | || |  | \____) |  | |
-//        | |   \______.'  | || |   \______,'  | || |  |_______|   | || |   \______.'  | |
-//        | |              | || |              | || |              | || |              | |
-//        | '--------------' || '--------------' || '--------------' || '--------------' |
-//         '----------------'  '----------------'  '----------------'  '----------------' 
-//2015 FRC Robotics competition
+/*         .----------------.  .----------------.  .----------------.  .----------------. 
+*         | .--------------. || .--------------. || .--------------. || .--------------. |
+*         | |    ______    | || |    ______    | || |    _____     | || |   _______    | |
+*         | |   / ____ `.  | || |  .' ____ '.  | || |   / ___ `.   | || |  |  _____|   | |
+*         | |   `'  __) |  | || |  | (____) |  | || |  |_/___) |   | || |  | |____     | |
+*         | |   _  |__ '.  | || |  '_.____. |  | || |   .'____.'   | || |  '_.____''.  | |
+*         | |  | \____) |  | || |  | \____| |  | || |  / /____     | || |  | \____) |  | |
+*         | |   \______.'  | || |   \______,'  | || |  |_______|   | || |   \______.'  | |
+*         | |              | || |              | || |              | || |              | |
+*         | '--------------' || '--------------' || '--------------' || '--------------' |
+*          '----------------'  '----------------'  '----------------'  '----------------' 
+*		  2015 FRC Robotics competition
+*/
 
 package org.usfirst.frc.team3925.robot;
-
+import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_LEFT_ENCODER_A;
+import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_LEFT_ENCODER_B;
 import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_LEFT_MOTOR;
+import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_RIGHT_ENCODER_A;
+import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_RIGHT_ENCODER_B;
 import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_RIGHT_MOTOR;
 import static org.usfirst.frc.team3925.robot.RobotMap.ELEVATOR_ENCODER_A;
 import static org.usfirst.frc.team3925.robot.RobotMap.ELEVATOR_ENCODER_B;
@@ -22,19 +26,23 @@ import static org.usfirst.frc.team3925.robot.RobotMap.ELEVATOR_RIGHT_TALON;
 import static org.usfirst.frc.team3925.robot.RobotMap.ELEVATOR_SWITCH_1;
 import static org.usfirst.frc.team3925.robot.RobotMap.ELEVATOR_SWITCH_2;
 import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_ROLLER;
+import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_LEFT_DOUBLE_SOLENOID_A;
+import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_LEFT_DOUBLE_SOLENOID_B;
+import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_RIGHT_DOUBLE_SOLENOID_A;
+import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_RIGHT_DOUBLE_SOLENOID_B;
+import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_VICTOR_LEFT_BACK;
+import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_VICTOR_LEFT_FRONT;
+import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_VICTOR_RIGHT_BACK;
+import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_VICTOR_RIGHT_FRONT;
 import static org.usfirst.frc.team3925.robot.RobotMap.JOYSTICK_XBOX_DRIVER;
 import static org.usfirst.frc.team3925.robot.RobotMap.JOYSTICK_XBOX_SHOOTER;
-import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_LEFT_ENCODER_A;
-import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_LEFT_ENCODER_B;
-import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_RIGHT_ENCODER_A;
-import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_RIGHT_ENCODER_B;
 
 import org.usfirst.frc.team3925.robot.command.CommandListExecutor;
 import org.usfirst.frc.team3925.robot.command.DriveDistance;
 import org.usfirst.frc.team3925.robot.command.TurnDriveEncoder;
 import org.usfirst.frc.team3925.robot.subsystem.Drive;
 import org.usfirst.frc.team3925.robot.subsystem.Elevator;
-import org.usfirst.frc.team3925.robot.subsystem.Rollers;
+import org.usfirst.frc.team3925.robot.subsystem.Intake;
 import org.usfirst.frc.team3925.robot.util.Button;
 import org.usfirst.frc.team3925.robot.util.Rumble;
 import org.usfirst.frc.team3925.robot.util.ToggleButton;
@@ -60,7 +68,7 @@ public class Robot extends IterativeRobot {
 	Timer timer;
 	Drive drive;
 	Elevator elevator;
-	Rollers intake;
+	Intake intake;
 	Rumble rumble;
 	
 	CommandListExecutor<Drive> autonomousDriveCommandList;
@@ -91,7 +99,7 @@ public class Robot extends IterativeRobot {
     	timer = new Timer();
     	drive = new Drive(DRIVE_LEFT_MOTOR, DRIVE_RIGHT_MOTOR, DRIVE_LEFT_ENCODER_A, DRIVE_LEFT_ENCODER_B, DRIVE_RIGHT_ENCODER_A, DRIVE_RIGHT_ENCODER_B);
     	elevator = new Elevator(ELEVATOR_LEFT_TALON, ELEVATOR_RIGHT_TALON, ELEVATOR_ENCODER_A, ELEVATOR_ENCODER_B, ELEVATOR_SWITCH_1, ELEVATOR_SWITCH_2);
-    	intake = new Rollers(INTAKE_ROLLER);
+    	intake = new Intake(INTAKE_ROLLER, INTAKE_VICTOR_LEFT_FRONT, INTAKE_VICTOR_RIGHT_FRONT, INTAKE_VICTOR_LEFT_BACK, INTAKE_VICTOR_RIGHT_BACK, INTAKE_LEFT_DOUBLE_SOLENOID_A, INTAKE_LEFT_DOUBLE_SOLENOID_B, INTAKE_RIGHT_DOUBLE_SOLENOID_A, INTAKE_RIGHT_DOUBLE_SOLENOID_B);
     	
     	shooterXbox = new Joystick(JOYSTICK_XBOX_SHOOTER);
     	driverXbox = new Joystick(JOYSTICK_XBOX_DRIVER);
@@ -179,8 +187,14 @@ public class Robot extends IterativeRobot {
 	}
 	
 	private void intakePeriodic() {
-		double intakeSpeed = shooterXbox.getRawAxis(2) - shooterXbox.getRawAxis(3);
-		intake.setSpeed(intakeSpeed);
+		double rollerSpeed = shooterXbox.getRawAxis(2) - shooterXbox.getRawAxis(3);
+		intake.setRollerSpeed(rollerSpeed);
+		
+		double frontArmSpeed = shooterXbox.getRawAxis(1);
+		intake.setFrontArmSpeeds(frontArmSpeed);
+		
+		double backArmSpeed = shooterXbox.getRawAxis(5);
+		intake.setBackArmSpeeds(backArmSpeed);
 	}
 	
 	private void drivePeriodic() {

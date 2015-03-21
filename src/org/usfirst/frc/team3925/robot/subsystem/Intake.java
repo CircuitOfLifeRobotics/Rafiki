@@ -1,36 +1,33 @@
 package org.usfirst.frc.team3925.robot.subsystem;
 
-import edu.wpi.first.wpilibj.Talon;
-import edu.wpi.first.wpilibj.Victor;
 
 public class Intake {
 	
-	Talon rollers;
-	Victor frontRightArm;
-	Victor frontLeftArm;
-	Victor backRightArm;
-	Victor backLeftArm;
+	IntakeRollers rollers;
+	IntakeArms frontArm, backArm;
+	IntakeArmSolenoids intakeArmSolenoids;
 	
-	public Intake(int rollerport, int frontLeftPort, int frontRightPort, int backLeftPort, int backRightPort) {
-		rollers = new Talon(rollerport);
-		frontLeftArm = new Victor(frontLeftPort);
-		frontRightArm = new Victor(frontRightPort);
-		backLeftArm = new Victor(backLeftPort);
-		backRightArm = new Victor(backRightPort);
+	public Intake(int rollerport, int frontLeftPort, int frontRightPort, int backLeftPort, int backRightPort, int leftSolenoidPortA, int leftSolenoidPortB, int rightSolenoidPortA, int rightSolenoidPortB) {
+		rollers = new IntakeRollers(rollerport);
+		frontArm = new IntakeArms(frontLeftPort, frontRightPort);
+		backArm = new IntakeArms(backLeftPort, backRightPort);
+		intakeArmSolenoids = new IntakeArmSolenoids(leftSolenoidPortA, leftSolenoidPortB, rightSolenoidPortA, rightSolenoidPortB);
 	}
 	
 	public void setRollerSpeed(double speed) {
-		rollers.set(speed);
+		rollers.setSpeed(speed);
 	}
 	
 	public void setFrontArmSpeeds(double speed) {
-		frontLeftArm.set(speed);
-		frontRightArm.set(-speed);
+		frontArm.setSpeed(speed);;
 	}
 	
 	public void setBackArmSpeeds(double speed) {
-		backLeftArm.set(speed);
-		backRightArm.set(-speed);
+		backArm.setSpeed(speed);
+	}
+	
+	public void setArmSolenoids(boolean left, boolean right) {
+		intakeArmSolenoids.setSolenoids(left, right);
 	}
 	
 }
