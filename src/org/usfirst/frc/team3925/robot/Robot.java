@@ -29,9 +29,6 @@ import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_LEFT_ENCODER_B;
 import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_RIGHT_ENCODER_A;
 import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_RIGHT_ENCODER_B;
 
-import org.usfirst.frc.team3925.robot.command.CommandListExecutor;
-import org.usfirst.frc.team3925.robot.command.DriveDistance;
-import org.usfirst.frc.team3925.robot.command.TurnDriveEncoder;
 import org.usfirst.frc.team3925.robot.subsystem.Drive;
 import org.usfirst.frc.team3925.robot.subsystem.Elevator;
 import org.usfirst.frc.team3925.robot.subsystem.Rollers;
@@ -63,8 +60,6 @@ public class Robot extends IterativeRobot {
 	Rollers intake;
 	Rumble rumble;
 	
-	CommandListExecutor<Drive> autonomousDriveCommandList;
-	
 	Joystick driverXbox;
 	Joystick shooterXbox;
 	ToggleButton manualElevatorToggle;
@@ -79,7 +74,7 @@ public class Robot extends IterativeRobot {
 	double leftSpeed;
 	double rightSpeed;
 	
-	private static double LOW_GEAR_COEFFICIENT = 0.5;
+	private static double LOW_GEAR_COEFFICIENT = 0.4;
 	private static double HIGH_GEAR_COEFFICIENT = 1;
 	
     /**
@@ -101,14 +96,14 @@ public class Robot extends IterativeRobot {
     	lowerToteBtn = new Button(shooterXbox, 4);
     	stopElevatorBtn = new Button(shooterXbox, 3);
     	
-    	autonomousDriveCommandList = new CommandListExecutor<Drive>(
-    			new DriveDistance(72, 1),
-    			new TurnDriveEncoder(45, 1));
+    	leftDistanceDriven = 0;
+    	rightDistanceDriven = 0;
     }
 
     public void autonomousInit() {
     	//elevator.zeroElevator();
-    	autonomousDriveCommandList.reset();
+    	drive.resetLeftEncoder();
+    	drive.resetRightEncoder();
     	timer.reset();
     	timer.start();
     }
@@ -117,8 +112,12 @@ public class Robot extends IterativeRobot {
      * This function is called periodically during autonomous
      */
     public void autonomousPeriodic() {
-
-    	autonomousDriveCommandList.execute(drive);
+    	
+    	if (timer.get() < 3) {
+    		drive.setMotorOutputs(0.75, 0.75);
+    	} else {
+    		drive.setMotorOutputs(0, 0);
+    	}
     	
     	//elevator.elevatorRun();
     }
@@ -128,12 +127,12 @@ public class Robot extends IterativeRobot {
      */
     public void teleopInit() {
     	//elevator.zeroElevator();
-    	//manualElevatorToggle.reset();
+    	manualElevatorToggle.reset();
     	
     	drive.resetLeftEncoder();
     	drive.resetRightEncoder();
     	
-    	//elevator.idle();
+    	elevator.idle();
     }
 
     /**
@@ -143,7 +142,7 @@ public class Robot extends IterativeRobot {
     	
     	drivePeriodic();
 		SmartDashboard.putNumber("elevator height", elevator.getCurrentHeight());
-    	//elevatorPeriodic();
+    	elevatorPeriodic();
     	intakePeriodic();
     	
     }
@@ -155,7 +154,7 @@ public class Robot extends IterativeRobot {
 		
 		manualElevatorToggle.update();
 		
-		if (manualElevatorToggle.get()) {
+		if (!manualElevatorToggle.get()) {
 			elevator.idle();
 			
 			double elevatorSpeed = -shooterXbox.getRawAxis(1);
@@ -203,9 +202,6 @@ public class Robot extends IterativeRobot {
     	}
     	
 		drive.drive(moveValue, rotateValue, maxOutput);
-		
-		SmartDashboard.putNumber("left drive encoder", drive.getLeftDistance());
-		SmartDashboard.putNumber("right drive encoder", drive.getRightDistance());
 	}
     
     @Override
