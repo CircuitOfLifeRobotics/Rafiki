@@ -18,8 +18,8 @@ public class Elevator {
 	//sets constants
 	private static final double MAX_ELEVATOR_HEIGHT = 13.25;
 	private static final double TOLERANCE = 0.1;
-	private static final double UP_SPEED = -1d;
-	private static final double DOWN_SPEED = 1d;
+	private static final double UP_SPEED = -0.5d;
+	private static final double DOWN_SPEED = 0.5d;
 	private static final double TOTE_HEIGHT = 13.500001;
 	private static double elevatorEncoderOffset = 0;
 
