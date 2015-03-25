@@ -12,9 +12,9 @@ public class IntakeArms {
 		rightArm = new Victor(rightPort);
 	}
 	
-	public void setSpeed(double speed) {
-		leftArm.set(speed);
-		rightArm.set(-speed);
+	public void setSpeeds(double leftSpeed, double rightSpeed) {
+		leftArm.set(leftSpeed);
+		rightArm.set(rightSpeed);
 	}
 	
 }

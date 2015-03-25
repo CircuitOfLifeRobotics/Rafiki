@@ -13,7 +13,11 @@
 
 package org.usfirst.frc.team3925.robot;
 
+import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_LEFT_ENCODER_A;
+import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_LEFT_ENCODER_B;
 import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_LEFT_MOTOR;
+import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_RIGHT_ENCODER_A;
+import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_RIGHT_ENCODER_B;
 import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_RIGHT_MOTOR;
 import static org.usfirst.frc.team3925.robot.RobotMap.ELEVATOR_ENCODER_A;
 import static org.usfirst.frc.team3925.robot.RobotMap.ELEVATOR_ENCODER_B;
@@ -21,16 +25,22 @@ import static org.usfirst.frc.team3925.robot.RobotMap.ELEVATOR_LEFT_TALON;
 import static org.usfirst.frc.team3925.robot.RobotMap.ELEVATOR_RIGHT_TALON;
 import static org.usfirst.frc.team3925.robot.RobotMap.ELEVATOR_SWITCH_1;
 import static org.usfirst.frc.team3925.robot.RobotMap.ELEVATOR_SWITCH_2;
+import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_SOLENOID_LEFT_A;
+import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_SOLENOID_LEFT_B;
+import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_SOLENOID_RIGHT_A;
+import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_SOLENOID_RIGHT_B;
 import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_ROLLER;
+import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_VICTOR_UPPER_LEFT;
+import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_VICTOR_UPPER_RIGHT;
+import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_VICTOR_LOWER_LEFT;
+import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_VICTOR_LOWER_RIGHT;
 import static org.usfirst.frc.team3925.robot.RobotMap.JOYSTICK_XBOX_DRIVER;
 import static org.usfirst.frc.team3925.robot.RobotMap.JOYSTICK_XBOX_SHOOTER;
-import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_LEFT_ENCODER_A;
-import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_LEFT_ENCODER_B;
-import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_RIGHT_ENCODER_A;
-import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_RIGHT_ENCODER_B;
 
+import org.usfirst.frc.team3925.robot.subsystem.ArmPnuematics;
 import org.usfirst.frc.team3925.robot.subsystem.Drive;
 import org.usfirst.frc.team3925.robot.subsystem.Elevator;
+import org.usfirst.frc.team3925.robot.subsystem.IntakeArms;
 import org.usfirst.frc.team3925.robot.subsystem.Rollers;
 import org.usfirst.frc.team3925.robot.util.Button;
 import org.usfirst.frc.team3925.robot.util.Rumble;
@@ -57,8 +67,11 @@ public class Robot extends IterativeRobot {
 	Timer timer;
 	Drive drive;
 	Elevator elevator;
-	Rollers intake;
+	Rollers rollers;
+	IntakeArms upperArms;
+	IntakeArms lowerArms;
 	Rumble rumble;
+	ArmPnuematics arms;
 	
 	Joystick driverXbox;
 	Joystick shooterXbox;
@@ -74,8 +87,21 @@ public class Robot extends IterativeRobot {
 	double leftSpeed;
 	double rightSpeed;
 	
-	private static double LOW_GEAR_COEFFICIENT = 0.4;
-	private static double HIGH_GEAR_COEFFICIENT = 1;
+	private static double GEAR_COEFFICIENT = 0.4;
+	
+	/*
+	 * ShooterXbox:
+	 * elevator position 1:		A (1)
+	 * elevator position 2:		B (2)
+	 * elevator position 3:		X (3)
+	 * elevator position 4:		Y (4)
+	 * 
+	 * tote in initialize:		RT (5)
+	 * tote in sequence:		LT (analog 2)
+	 * 
+	 * tote out initialize:		LT (6)
+	 * tote out rollers:		RT (analog 3)
+	 */
 	
     /**
      * This function is run when the robot is first started up and should be
@@ -86,15 +112,18 @@ public class Robot extends IterativeRobot {
     	timer = new Timer();
     	drive = new Drive(DRIVE_LEFT_MOTOR, DRIVE_RIGHT_MOTOR, DRIVE_LEFT_ENCODER_A, DRIVE_LEFT_ENCODER_B, DRIVE_RIGHT_ENCODER_A, DRIVE_RIGHT_ENCODER_B);
     	elevator = new Elevator(ELEVATOR_LEFT_TALON, ELEVATOR_RIGHT_TALON, ELEVATOR_ENCODER_A, ELEVATOR_ENCODER_B, ELEVATOR_SWITCH_1, ELEVATOR_SWITCH_2);
-    	intake = new Rollers(INTAKE_ROLLER);
+    	rollers = new Rollers(INTAKE_ROLLER);
+    	upperArms = new IntakeArms(INTAKE_VICTOR_UPPER_LEFT, INTAKE_VICTOR_UPPER_RIGHT);
+    	lowerArms = new IntakeArms(INTAKE_VICTOR_LOWER_LEFT, INTAKE_VICTOR_LOWER_RIGHT);
+    	arms = new ArmPnuematics(INTAKE_SOLENOID_LEFT_A, INTAKE_SOLENOID_LEFT_B, INTAKE_SOLENOID_RIGHT_A, INTAKE_SOLENOID_RIGHT_B);
     	
     	shooterXbox = new Joystick(JOYSTICK_XBOX_SHOOTER);
     	driverXbox = new Joystick(JOYSTICK_XBOX_DRIVER);
     	manualElevatorToggle = new ToggleButton(shooterXbox, 8 /* start */);
-    	zeroElevatorBtn = new Button(shooterXbox, 2);
-    	liftToteBtn = new Button(shooterXbox, 1);
-    	lowerToteBtn = new Button(shooterXbox, 4);
-    	stopElevatorBtn = new Button(shooterXbox, 3);
+    	zeroElevatorBtn = new Button(shooterXbox, 7);
+    	liftToteBtn = new Button(shooterXbox, 4);
+    	lowerToteBtn = new Button(shooterXbox, 1);
+    	stopElevatorBtn = new Button(shooterXbox, 2);
     	
     	leftDistanceDriven = 0;
     	rightDistanceDriven = 0;
@@ -158,12 +187,15 @@ public class Robot extends IterativeRobot {
 			elevator.idle();
 			
 			double elevatorSpeed = -shooterXbox.getRawAxis(1);
-			elevator.setElevatorSpeed(elevatorSpeed, false);
+			elevator.setElevatorSpeed(elevatorSpeed, true);
+			SmartDashboard.putNumber("elevator speed", elevatorSpeed);
 		} else {
 			if (lowerToteBtn.get()) {
+				SmartDashboard.putBoolean("lowerTote", true);
 				elevator.lowerStack();
 			}
 			if (liftToteBtn.get()) {
+				SmartDashboard.putBoolean("liftTote", true);
 				elevator.liftStack();
 			}
 			if (zeroElevatorBtn.get()) {
@@ -171,6 +203,7 @@ public class Robot extends IterativeRobot {
 				elevator.zeroElevator();
 			}
 			if (stopElevatorBtn.get()) {
+				SmartDashboard.putBoolean("stopElevator", true);
 				elevator.idle();
 			}
 			elevator.elevatorRun();
@@ -178,8 +211,25 @@ public class Robot extends IterativeRobot {
 	}
 	
 	private void intakePeriodic() {
-		double intakeSpeed = shooterXbox.getRawAxis(2) - shooterXbox.getRawAxis(3);
-		intake.setSpeed(intakeSpeed);
+		double rollersSpeed = shooterXbox.getRawAxis(2) - shooterXbox.getRawAxis(3);
+		rollers.setSpeed(rollersSpeed);
+		/* if (driverXbox.getRawButton(5)) {
+			upperArms.setSpeeds(1, -1);
+			lowerArms.setSpeeds(1, -1);
+		}
+		if (driverXbox.getRawButton(6)) {
+			upperArms.setSpeeds(1, -1);
+			lowerArms.setSpeeds(-1, 1);
+		}*/
+		double upperIntakeSpeed = (driverXbox.getRawButton(4) ? 0.5:0) - (driverXbox.getRawButton(3) ? 0.5:0);
+		double lowerIntakeSpeed = (driverXbox.getRawButton(1) ? 0.5:0) - (driverXbox.getRawButton(2) ? 0.5:0);
+		SmartDashboard.putNumber("upper arm speed", upperIntakeSpeed);
+		SmartDashboard.putNumber("lower arm speed", lowerIntakeSpeed);
+		lowerArms.setSpeeds(lowerIntakeSpeed, -lowerIntakeSpeed);
+		upperArms.setSpeeds(upperIntakeSpeed, -upperIntakeSpeed);
+		boolean leftArmState = driverXbox.getRawButton(5);
+		boolean rightArmState = driverXbox.getRawButton(6);
+		arms.setArms(leftArmState, rightArmState);
 	}
 	
 	private void drivePeriodic() {
@@ -192,21 +242,14 @@ public class Robot extends IterativeRobot {
     		rotateValue = 0;
     	
     	double maxOutput;
-    	boolean gear1 = driverXbox.getRawButton(5);
-    	boolean gear2 = driverXbox.getRawButton(6);
-    	
-    	if (gear1 || gear2) {
-    		maxOutput = HIGH_GEAR_COEFFICIENT;
-    	} else {
-    		maxOutput = LOW_GEAR_COEFFICIENT;
-    	}
+    	maxOutput = GEAR_COEFFICIENT;
     	
 		drive.drive(moveValue, rotateValue, maxOutput);
 	}
     
     @Override
     public void disabledInit() {
-    	drive.drive(0, 0, LOW_GEAR_COEFFICIENT);
+    	drive.drive(0, 0, GEAR_COEFFICIENT);
     }
     
     @Override

@@ -5,24 +5,30 @@ package org.usfirst.frc.team3925.robot.subsystem;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Talon;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Elevator {
 	
 	public enum State {
 		IDLE, RESET,
-		LIFT_INIT, LIFT_WAIT_DOWN, LIFT_WAIT_UP,
+		LIFT_INIT_1, LIFT_WAIT_DOWN_1, LIFT_WAIT_UP_1,
 		LOWER_INIT, LOWER_WAIT_DOWN;
 	}
 	
 	
 	//sets constants
-	private static final double MAX_ELEVATOR_HEIGHT = 13.25;
-	private static final double TOLERANCE = 0.1;
-	private static final double UP_SPEED = -0.5d;
-	private static final double DOWN_SPEED = 0.5d;
-	private static final double TOTE_HEIGHT = 13.500001;
+	private static final double ELEVATOR_POS_1 = 0;
+	private static final double ELEVATOR_POS_2 = 20;
+	private static final double ELEVATOR_POS_3 = 34;
+	private static final double TOLERANCE = 0.5d;
+	private static final double DOWN_SPEED = -0.5d;
+	private static final double UP_SPEED = 0.5d;
 	private static double elevatorEncoderOffset = 0;
-
+	
+	//min (bottom) 19.672
+	//max (top) -14.405
+	//difference (total travel) 34.077
+	
 	//vital variables
 	double targetHeight = 0;
 	State state = State.IDLE;
@@ -49,12 +55,13 @@ public class Elevator {
 	//sets the raw elevator speed, limits speed based on maximum height
 	public void setElevatorSpeed(double speed, boolean doLimits) {
 		if (doLimits) {
-			if (getCurrentHeight() >= MAX_ELEVATOR_HEIGHT && speed > 0) {
+			if (getCurrentHeight() >= ELEVATOR_POS_3 && speed > 0) {
 				speed = 0;
 			}else if (getCurrentHeight() <= 0 && speed < 0) {
 				speed = 0;
 			}
 		}
+		SmartDashboard.putNumber("speed", -speed);
 		speed = -speed; // motors on the robot are inverted
 		leftElevatorMotor.set(speed);
 		rightElevatorMotor.set(speed);
@@ -65,9 +72,9 @@ public class Elevator {
 		double current = getCurrentHeight();
 		if (Math.abs(height-current) > TOLERANCE) {
 			if (current > height) {
-				setElevatorSpeed(UP_SPEED, doLimits);
-			}else {
 				setElevatorSpeed(DOWN_SPEED, doLimits);
+			}else {
+				setElevatorSpeed(UP_SPEED, doLimits);
 			}
 		}else {
 			setElevatorSpeed(0, doLimits);
@@ -80,22 +87,23 @@ public class Elevator {
 		case IDLE:
 			targetHeight = getCurrentHeight();
 			break;
-		case LIFT_INIT:
-			targetHeight = 0;
-			state = State.LIFT_WAIT_DOWN;
-		case LIFT_WAIT_DOWN:
+		case LIFT_INIT_1:
+			targetHeight = ELEVATOR_POS_2;
+			state = State.LIFT_WAIT_DOWN_1;
+		case LIFT_WAIT_DOWN_1:
 			if (Math.abs(getCurrentHeight()-targetHeight) < TOLERANCE) {
-				targetHeight = TOTE_HEIGHT;
-				state = State.LIFT_WAIT_UP;
+				targetHeight = ELEVATOR_POS_3;
+				state = State.LIFT_WAIT_UP_1;
 			}
 			break;
-		case LIFT_WAIT_UP:
+		case LIFT_WAIT_UP_1:
 			if (Math.abs(getCurrentHeight()-targetHeight) < TOLERANCE) {
 				state = State.IDLE;
+			}else {
 			}
 			break;
 		case LOWER_INIT:
-			targetHeight = 0;
+			targetHeight = ELEVATOR_POS_1;
 			state = State.LOWER_WAIT_DOWN;
 		case LOWER_WAIT_DOWN:
 			if (Math.abs(getCurrentHeight()-targetHeight) < TOLERANCE) {
@@ -104,29 +112,30 @@ public class Elevator {
 			break;
 		case RESET:
 			if (Math.abs(getCurrentHeight()-targetHeight) < TOLERANCE) {
-				targetHeight = 0;
+				targetHeight = ELEVATOR_POS_1;
 				elevatorEncoderOffset = 0;
-				state = State.LIFT_WAIT_UP;
+				state = State.LIFT_WAIT_UP_1;
 			}
 			if (!limitSwitch1.get()/* || !limitSwitch2.get()*/) {
 				elevatorEncoder.reset();
-				targetHeight = 0;
-				state = State.LIFT_WAIT_UP;
+				targetHeight = ELEVATOR_POS_1;
+				state = State.LIFT_WAIT_UP_1;
 			}
 			
 		}
+		SmartDashboard.putNumber("target", targetHeight);
 		updateHeight(targetHeight, state != State.RESET);
 	}
 	
 	//resets the height to 0
 	public void zeroElevator() {
-		targetHeight = -1.2 * MAX_ELEVATOR_HEIGHT;
+		targetHeight = -1.2 * ELEVATOR_POS_3;
     	state = State.RESET;
 	}
 	
 	//lifts the elevator to tote height
 	public void liftStack() {
-		state = State.LIFT_INIT;
+		state = State.LIFT_INIT_1;
 	}
 	
 	//lowers the elevator to 0
