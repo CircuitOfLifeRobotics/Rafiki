@@ -12,14 +12,15 @@ public class Elevator {
 	public enum State {
 		IDLE, RESET,
 		LIFT_INIT_1, LIFT_WAIT_DOWN_1, LIFT_WAIT_UP_1,
+		LIFT_INIT_2, LIFT_WAIT_DOWN_2, LIFT_WAIT_UP_2,
 		LOWER_INIT, LOWER_WAIT_DOWN;
 	}
 	
-	
 	//sets constants
 	private static final double ELEVATOR_POS_1 = 0;
-	private static final double ELEVATOR_POS_2 = 20;
-	private static final double ELEVATOR_POS_3 = 34;
+	private static final double ELEVATOR_POS_2 = 15;
+	private static final double ELEVATOR_POS_3 = 25;
+	private static final double ELEVATOR_POS_4 = 32;
 	private static final double TOLERANCE = 0.5d;
 	private static final double DOWN_SPEED = -0.5d;
 	private static final double UP_SPEED = 0.5d;
@@ -54,8 +55,9 @@ public class Elevator {
 	
 	//sets the raw elevator speed, limits speed based on maximum height
 	public void setElevatorSpeed(double speed, boolean doLimits) {
+		//doLimits = false; //TODO: DEBUG
 		if (doLimits) {
-			if (getCurrentHeight() >= ELEVATOR_POS_3 && speed > 0) {
+			if (getCurrentHeight() >= ELEVATOR_POS_4 && speed > 0) {
 				speed = 0;
 			}else if (getCurrentHeight() <= 0 && speed < 0) {
 				speed = 0;
@@ -92,14 +94,27 @@ public class Elevator {
 			state = State.LIFT_WAIT_DOWN_1;
 		case LIFT_WAIT_DOWN_1:
 			if (Math.abs(getCurrentHeight()-targetHeight) < TOLERANCE) {
-				targetHeight = ELEVATOR_POS_3;
+				targetHeight = ELEVATOR_POS_4;
 				state = State.LIFT_WAIT_UP_1;
 			}
 			break;
 		case LIFT_WAIT_UP_1:
 			if (Math.abs(getCurrentHeight()-targetHeight) < TOLERANCE) {
 				state = State.IDLE;
-			}else {
+			}
+			break;
+		case LIFT_INIT_2:
+			targetHeight = ELEVATOR_POS_1;
+			state = State.LIFT_WAIT_DOWN_1;
+		case LIFT_WAIT_DOWN_2:
+			if (Math.abs(getCurrentHeight()-targetHeight) < TOLERANCE) {
+				targetHeight = ELEVATOR_POS_3;
+				state = State.LIFT_WAIT_UP_1;
+			}
+			break;
+		case LIFT_WAIT_UP_2:
+			if (Math.abs(getCurrentHeight()-targetHeight) < TOLERANCE) {
+				state = State.IDLE;
 			}
 			break;
 		case LOWER_INIT:
@@ -129,13 +144,17 @@ public class Elevator {
 	
 	//resets the height to 0
 	public void zeroElevator() {
-		targetHeight = -1.2 * ELEVATOR_POS_3;
+		targetHeight = -1.2 * ELEVATOR_POS_4;
     	state = State.RESET;
 	}
 	
 	//lifts the elevator to tote height
-	public void liftStack() {
+	public void liftStackUpper() {
 		state = State.LIFT_INIT_1;
+	}
+	
+	public void liftStackLower() {
+		state = State.LIFT_INIT_2;
 	}
 	
 	//lowers the elevator to 0

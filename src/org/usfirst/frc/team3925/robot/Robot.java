@@ -13,35 +13,14 @@
 
 package org.usfirst.frc.team3925.robot;
 
-import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_LEFT_ENCODER_A;
-import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_LEFT_ENCODER_B;
-import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_LEFT_MOTOR;
-import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_RIGHT_ENCODER_A;
-import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_RIGHT_ENCODER_B;
-import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_RIGHT_MOTOR;
-import static org.usfirst.frc.team3925.robot.RobotMap.ELEVATOR_ENCODER_A;
-import static org.usfirst.frc.team3925.robot.RobotMap.ELEVATOR_ENCODER_B;
-import static org.usfirst.frc.team3925.robot.RobotMap.ELEVATOR_LEFT_TALON;
-import static org.usfirst.frc.team3925.robot.RobotMap.ELEVATOR_RIGHT_TALON;
-import static org.usfirst.frc.team3925.robot.RobotMap.ELEVATOR_SWITCH_1;
-import static org.usfirst.frc.team3925.robot.RobotMap.ELEVATOR_SWITCH_2;
-import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_SOLENOID_LEFT_A;
-import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_SOLENOID_LEFT_B;
-import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_SOLENOID_RIGHT_A;
-import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_SOLENOID_RIGHT_B;
-import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_ROLLER;
-import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_VICTOR_UPPER_LEFT;
-import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_VICTOR_UPPER_RIGHT;
-import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_VICTOR_LOWER_LEFT;
-import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_VICTOR_LOWER_RIGHT;
-import static org.usfirst.frc.team3925.robot.RobotMap.JOYSTICK_XBOX_DRIVER;
-import static org.usfirst.frc.team3925.robot.RobotMap.JOYSTICK_XBOX_SHOOTER;
+import static org.usfirst.frc.team3925.robot.RobotMap.*;
 
 import org.usfirst.frc.team3925.robot.subsystem.ArmPnuematics;
 import org.usfirst.frc.team3925.robot.subsystem.Drive;
 import org.usfirst.frc.team3925.robot.subsystem.Elevator;
 import org.usfirst.frc.team3925.robot.subsystem.IntakeArms;
 import org.usfirst.frc.team3925.robot.subsystem.Rollers;
+import org.usfirst.frc.team3925.robot.subsystem.ToteRangeFinder;
 import org.usfirst.frc.team3925.robot.util.Button;
 import org.usfirst.frc.team3925.robot.util.Rumble;
 import org.usfirst.frc.team3925.robot.util.ToggleButton;
@@ -72,14 +51,22 @@ public class Robot extends IterativeRobot {
 	IntakeArms lowerArms;
 	Rumble rumble;
 	ArmPnuematics arms;
+	ToteRangeFinder toteRangeFinder;
+	ToteRangeFinder feederStationToteFinder;
 	
 	Joystick driverXbox;
 	Joystick shooterXbox;
+	
 	ToggleButton manualElevatorToggle;
 	Button zeroElevatorBtn;
 	Button liftToteBtn;
 	Button lowerToteBtn;
 	Button stopElevatorBtn;
+	Button liftBinBtn;
+	
+	ToggleButton manualIntakeToggle;
+	Button rightArm;
+	Button leftArm;
 	
 	private final double DEADZONE = 0.1;
 	double leftDistanceDriven;
@@ -87,7 +74,7 @@ public class Robot extends IterativeRobot {
 	double leftSpeed;
 	double rightSpeed;
 	
-	private static double GEAR_COEFFICIENT = 0.4;
+	private static double GEAR_COEFFICIENT = 0.8;
 	
 	/*
 	 * ShooterXbox:
@@ -116,14 +103,22 @@ public class Robot extends IterativeRobot {
     	upperArms = new IntakeArms(INTAKE_VICTOR_UPPER_LEFT, INTAKE_VICTOR_UPPER_RIGHT);
     	lowerArms = new IntakeArms(INTAKE_VICTOR_LOWER_LEFT, INTAKE_VICTOR_LOWER_RIGHT);
     	arms = new ArmPnuematics(INTAKE_SOLENOID_LEFT_A, INTAKE_SOLENOID_LEFT_B, INTAKE_SOLENOID_RIGHT_A, INTAKE_SOLENOID_RIGHT_B);
+    	toteRangeFinder = new ToteRangeFinder(RANGE_FINDER_TOTE);
+    	feederStationToteFinder = new ToteRangeFinder(RANGE_FINDER_STATION);
     	
     	shooterXbox = new Joystick(JOYSTICK_XBOX_SHOOTER);
     	driverXbox = new Joystick(JOYSTICK_XBOX_DRIVER);
+    	
     	manualElevatorToggle = new ToggleButton(shooterXbox, 8 /* start */);
     	zeroElevatorBtn = new Button(shooterXbox, 7);
     	liftToteBtn = new Button(shooterXbox, 4);
     	lowerToteBtn = new Button(shooterXbox, 1);
     	stopElevatorBtn = new Button(shooterXbox, 2);
+    	liftBinBtn = new Button(shooterXbox, 3);
+    	
+    	manualIntakeToggle = new ToggleButton(driverXbox, 7);
+    	rightArm = new Button(driverXbox, 5);
+    	leftArm = new Button(driverXbox, 6);
     	
     	leftDistanceDriven = 0;
     	rightDistanceDriven = 0;
@@ -196,7 +191,7 @@ public class Robot extends IterativeRobot {
 			}
 			if (liftToteBtn.get()) {
 				SmartDashboard.putBoolean("liftTote", true);
-				elevator.liftStack();
+				elevator.liftStackUpper();
 			}
 			if (zeroElevatorBtn.get()) {
 				SmartDashboard.putBoolean("zero'd", true);
@@ -206,30 +201,47 @@ public class Robot extends IterativeRobot {
 				SmartDashboard.putBoolean("stopElevator", true);
 				elevator.idle();
 			}
+			if (liftBinBtn.get()) {
+				SmartDashboard.putBoolean("liftBin", true);
+				elevator.liftStackLower();
+			}
 			elevator.elevatorRun();
 		}
 	}
 	
 	private void intakePeriodic() {
-		double rollersSpeed = shooterXbox.getRawAxis(2) - shooterXbox.getRawAxis(3);
-		rollers.setSpeed(rollersSpeed);
-		/* if (driverXbox.getRawButton(5)) {
-			upperArms.setSpeeds(1, -1);
-			lowerArms.setSpeeds(1, -1);
+		SmartDashboard.putNumber("tote range", toteRangeFinder.getVolts());
+		SmartDashboard.putNumber("station range", feederStationToteFinder.getVolts());
+		
+		manualIntakeToggle.update();
+		
+		if (manualIntakeToggle.get()) {
+			double rollersSpeed = shooterXbox.getRawAxis(2) - shooterXbox.getRawAxis(3);
+			rollers.setSpeed(rollersSpeed);
+			double upperIntakeSpeed = (driverXbox.getRawButton(4) ? 0.5:0) - (driverXbox.getRawButton(3) ? 0.5:0);
+			double lowerIntakeSpeed = (driverXbox.getRawButton(1) ? 0.5:0) - (driverXbox.getRawButton(2) ? 0.5:0);
+			SmartDashboard.putNumber("upper arm speed", upperIntakeSpeed);
+			SmartDashboard.putNumber("lower arm speed", lowerIntakeSpeed);
+			lowerArms.setSpeeds(lowerIntakeSpeed, -lowerIntakeSpeed);
+			upperArms.setSpeeds(upperIntakeSpeed, -upperIntakeSpeed);
+			boolean armState = driverXbox.getRawButton(5);
+			SmartDashboard.putBoolean("armPnuematics", armState);
+			arms.setArms(armState, armState);
+		}else {
+			boolean leftArmState = leftArm.get();
+			boolean rightArmState = rightArm.get();
+			arms.setArms(leftArmState, rightArmState);
+			
+			double binSpeed = driverXbox.getRawAxis(5);
+			double toteSpeed = driverXbox.getRawAxis(6);
+			if (binSpeed != 0) {
+				upperArms.setSpeeds(-binSpeed, binSpeed);
+				lowerArms.setSpeeds(binSpeed, -binSpeed);
+			}else {
+				upperArms.setSpeeds(toteSpeed, -toteSpeed);
+				lowerArms.setSpeeds(toteSpeed, -toteSpeed);
+			}
 		}
-		if (driverXbox.getRawButton(6)) {
-			upperArms.setSpeeds(1, -1);
-			lowerArms.setSpeeds(-1, 1);
-		}*/
-		double upperIntakeSpeed = (driverXbox.getRawButton(4) ? 0.5:0) - (driverXbox.getRawButton(3) ? 0.5:0);
-		double lowerIntakeSpeed = (driverXbox.getRawButton(1) ? 0.5:0) - (driverXbox.getRawButton(2) ? 0.5:0);
-		SmartDashboard.putNumber("upper arm speed", upperIntakeSpeed);
-		SmartDashboard.putNumber("lower arm speed", lowerIntakeSpeed);
-		lowerArms.setSpeeds(lowerIntakeSpeed, -lowerIntakeSpeed);
-		upperArms.setSpeeds(upperIntakeSpeed, -upperIntakeSpeed);
-		boolean leftArmState = driverXbox.getRawButton(5);
-		boolean rightArmState = driverXbox.getRawButton(6);
-		arms.setArms(leftArmState, rightArmState);
 	}
 	
 	private void drivePeriodic() {
