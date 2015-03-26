@@ -182,6 +182,14 @@ public class Robot extends IterativeRobot {
 		SmartDashboard.putNumber("tote range", toteRangeFinder.getVolts());
 		SmartDashboard.putNumber("station range", feederStationToteFinder.getVolts());
 		
+		double driverRollerSpeed = oi.driverXbox.getRawAxis(2) - oi.driverXbox.getRawAxis(3);
+		double shooterRollerSpeed = oi.shooterXbox.getRawAxis(2) - oi.driverXbox.getRawAxis(3);
+		if (Math.abs(shooterRollerSpeed) > Math.abs(driverRollerSpeed)) {
+			rollers.setSpeed(shooterRollerSpeed);
+		}else {
+			rollers.setSpeed(driverRollerSpeed);
+		}
+		
 		/*
 		if (manualIntakeToggle.get()) {
 			double rollersSpeed = shooterXbox.getRawAxis(2) - shooterXbox.getRawAxis(3);
