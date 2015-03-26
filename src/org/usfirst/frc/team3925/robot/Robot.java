@@ -63,7 +63,8 @@ public class Robot extends IterativeRobot {
 	double leftSpeed;
 	double rightSpeed;
 	
-	private static double GEAR_COEFFICIENT = 0.8;
+	private static double LOW_GEAR_COEFFICIENT = 0.8;
+	private static double HIGH_GEAR_COEFFICIENT = 1;
 	
 	/*
 	 * ShooterXbox:
@@ -190,6 +191,18 @@ public class Robot extends IterativeRobot {
 			rollers.setSpeed(driverRollerSpeed);
 		}
 		
+		double lowerArmSpeed = Math.min(1, (oi.driverXbox.getRawButton(5) ? 1:0) + (oi.driverXbox.getRawButton(6) ? 1:0));
+		double driverUpperArmSpeed = (oi.driverXbox.getRawButton(5) ? 1:0) + (oi.driverXbox.getRawButton(6) ? -1:0);
+		double upperArmSpeed;
+		double shooterUpperArmSpeed = (oi.shooterXbox.getRawButton(5) ? 1:0) + (oi.shooterXbox.getRawButton(6) ? -1:0);
+		if (Math.abs(shooterUpperArmSpeed) > Math.abs(driverUpperArmSpeed)) {
+			upperArmSpeed = shooterUpperArmSpeed;
+		}else {
+			upperArmSpeed = driverUpperArmSpeed;
+		}
+		upperArms.setSpeeds(upperArmSpeed, -upperArmSpeed);
+		lowerArms.setSpeeds(lowerArmSpeed, -lowerArmSpeed);
+		
 		/*
 		if (manualIntakeToggle.get()) {
 			double rollersSpeed = shooterXbox.getRawAxis(2) - shooterXbox.getRawAxis(3);
@@ -232,14 +245,14 @@ public class Robot extends IterativeRobot {
     		rotateValue = 0;
     	
     	double maxOutput;
-    	maxOutput = GEAR_COEFFICIENT;
+    	maxOutput = oi.turboBtn.get() ? HIGH_GEAR_COEFFICIENT:LOW_GEAR_COEFFICIENT;
     	
 		drive.drive(moveValue, rotateValue, maxOutput);
 	}
     
     @Override
     public void disabledInit() {
-    	drive.drive(0, 0, GEAR_COEFFICIENT);
+    	drive.drive(0, 0, LOW_GEAR_COEFFICIENT);
     }
     
     @Override

@@ -22,6 +22,8 @@ public class OI {
 	public AwesomeButton rightArmBtn;
 	public AwesomeButton leftArmBtn;	
 	
+	public AwesomeButton turboBtn;
+	
 	public OI () {
 		shooterXbox = new Joystick(JOYSTICK_XBOX_SHOOTER);
     	driverXbox = new Joystick(JOYSTICK_XBOX_DRIVER);
@@ -34,6 +36,8 @@ public class OI {
     	
     	rightArmBtn = new AwesomeButton(driverXbox, 5, AwesomeButton.ButtonType.RAW);
     	leftArmBtn = new AwesomeButton(driverXbox, 6, AwesomeButton.ButtonType.RAW);
+    	
+    	turboBtn = new AwesomeButton(driverXbox, 10, AwesomeButton.ButtonType.TOGGLE);
 	}
 	
 }
