@@ -21,6 +21,7 @@ import org.usfirst.frc.team3925.robot.subsystem.Elevator;
 import org.usfirst.frc.team3925.robot.subsystem.IntakeArms;
 import org.usfirst.frc.team3925.robot.subsystem.Rollers;
 import org.usfirst.frc.team3925.robot.subsystem.ToteRangeFinder;
+import org.usfirst.frc.team3925.robot.util.AwesomeButton;
 import org.usfirst.frc.team3925.robot.util.Button;
 import org.usfirst.frc.team3925.robot.util.Rumble;
 import org.usfirst.frc.team3925.robot.util.ToggleButton;
@@ -54,19 +55,7 @@ public class Robot extends IterativeRobot {
 	ToteRangeFinder toteRangeFinder;
 	ToteRangeFinder feederStationToteFinder;
 	
-	Joystick driverXbox;
-	Joystick shooterXbox;
-	
-	ToggleButton manualElevatorToggle;
-	Button zeroElevatorBtn;
-	Button liftToteBtn;
-	Button lowerToteBtn;
-	Button stopElevatorBtn;
-	Button liftBinBtn;
-	
-	ToggleButton manualIntakeToggle;
-	Button rightArm;
-	Button leftArm;
+	OI oi;
 	
 	private final double DEADZONE = 0.1;
 	double leftDistanceDriven;
@@ -106,19 +95,7 @@ public class Robot extends IterativeRobot {
     	toteRangeFinder = new ToteRangeFinder(RANGE_FINDER_TOTE);
     	feederStationToteFinder = new ToteRangeFinder(RANGE_FINDER_STATION);
     	
-    	shooterXbox = new Joystick(JOYSTICK_XBOX_SHOOTER);
-    	driverXbox = new Joystick(JOYSTICK_XBOX_DRIVER);
-    	
-    	manualElevatorToggle = new ToggleButton(shooterXbox, 8 /* start */);
-    	zeroElevatorBtn = new Button(shooterXbox, 7);
-    	liftToteBtn = new Button(shooterXbox, 4);
-    	lowerToteBtn = new Button(shooterXbox, 1);
-    	stopElevatorBtn = new Button(shooterXbox, 2);
-    	liftBinBtn = new Button(shooterXbox, 3);
-    	
-    	manualIntakeToggle = new ToggleButton(driverXbox, 7);
-    	rightArm = new Button(driverXbox, 5);
-    	leftArm = new Button(driverXbox, 6);
+    	oi = new OI();
     	
     	leftDistanceDriven = 0;
     	rightDistanceDriven = 0;
@@ -151,8 +128,6 @@ public class Robot extends IterativeRobot {
      */
     public void teleopInit() {
     	//elevator.zeroElevator();
-    	manualElevatorToggle.reset();
-    	
     	drive.resetLeftEncoder();
     	drive.resetRightEncoder();
     	
@@ -176,34 +151,28 @@ public class Robot extends IterativeRobot {
 	 */
 	private void elevatorPeriodic() {
 		
-		manualElevatorToggle.update();
-		
-		if (!manualElevatorToggle.get()) {
+		if (oi.manualElevatorBtn.get()) {
 			elevator.idle();
 			
-			double elevatorSpeed = -shooterXbox.getRawAxis(1);
+			double elevatorSpeed = -oi.shooterXbox.getRawAxis(1);
 			elevator.setElevatorSpeed(elevatorSpeed, true);
 			SmartDashboard.putNumber("elevator speed", elevatorSpeed);
 		} else {
-			if (lowerToteBtn.get()) {
+			if (oi.lowerToteBtn.get()) {
 				SmartDashboard.putBoolean("lowerTote", true);
 				elevator.lowerStack();
 			}
-			if (liftToteBtn.get()) {
+			if (oi.liftToteBtn.get()) {
 				SmartDashboard.putBoolean("liftTote", true);
 				elevator.liftStackUpper();
 			}
-			if (zeroElevatorBtn.get()) {
+			if (oi.zeroElevatorBtn.get()) {
 				SmartDashboard.putBoolean("zero'd", true);
 				elevator.zeroElevator();
 			}
-			if (stopElevatorBtn.get()) {
+			if (oi.stopElevatorBtn.get()) {
 				SmartDashboard.putBoolean("stopElevator", true);
 				elevator.idle();
-			}
-			if (liftBinBtn.get()) {
-				SmartDashboard.putBoolean("liftBin", true);
-				elevator.liftStackLower();
 			}
 			elevator.elevatorRun();
 		}
@@ -213,8 +182,7 @@ public class Robot extends IterativeRobot {
 		SmartDashboard.putNumber("tote range", toteRangeFinder.getVolts());
 		SmartDashboard.putNumber("station range", feederStationToteFinder.getVolts());
 		
-		manualIntakeToggle.update();
-		
+		/*
 		if (manualIntakeToggle.get()) {
 			double rollersSpeed = shooterXbox.getRawAxis(2) - shooterXbox.getRawAxis(3);
 			rollers.setSpeed(rollersSpeed);
@@ -228,8 +196,8 @@ public class Robot extends IterativeRobot {
 			SmartDashboard.putBoolean("armPnuematics", armState);
 			arms.setArms(armState, armState);
 		}else {
-			boolean leftArmState = leftArm.get();
-			boolean rightArmState = rightArm.get();
+			boolean leftArmState = leftArmBtn.get();
+			boolean rightArmState = rightArmBtn.get();
 			arms.setArms(leftArmState, rightArmState);
 			
 			double binSpeed = driverXbox.getRawAxis(5);
@@ -241,12 +209,14 @@ public class Robot extends IterativeRobot {
 				upperArms.setSpeeds(toteSpeed, -toteSpeed);
 				lowerArms.setSpeeds(toteSpeed, -toteSpeed);
 			}
+			
 		}
+		*/
 	}
 	
 	private void drivePeriodic() {
-		double moveValue = driverXbox.getRawAxis(1);
-    	double rotateValue = driverXbox.getRawAxis(4);
+		double moveValue = oi.driverXbox.getRawAxis(1);
+    	double rotateValue = oi.driverXbox.getRawAxis(4);
     	
     	if (Math.abs(moveValue) < DEADZONE)
     		moveValue = 0;

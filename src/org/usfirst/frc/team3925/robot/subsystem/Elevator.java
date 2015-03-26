@@ -18,7 +18,7 @@ public class Elevator {
 	
 	//sets constants
 	private static final double ELEVATOR_POS_1 = 0;
-	private static final double ELEVATOR_POS_2 = 15;
+	private static final double ELEVATOR_POS_2 = 12.5;
 	private static final double ELEVATOR_POS_3 = 25;
 	private static final double ELEVATOR_POS_4 = 32;
 	private static final double TOLERANCE = 0.5d;
