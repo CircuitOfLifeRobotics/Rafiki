@@ -17,12 +17,12 @@ public class Elevator {
 	}
 	
 	//sets constants
-	private static final double ELEVATOR_POS_1 = 0;
-	private static final double ELEVATOR_POS_2 = 12.5;
+	private static final double ELEVATOR_POS_BOTTOM = 0;
+	private static final double ELEVATOR_POS_GRAB_TOTE = 12.5;
 	private static final double ELEVATOR_POS_3 = 25;
-	private static final double ELEVATOR_POS_4 = 32;
-	private static final double TOLERANCE = 0.5d;
-	private static final double DOWN_SPEED = -0.5d;
+	private static final double ELEVATOR_POS_TOP = 32;
+	private static final double TOLERANCE = 1d;
+	private static final double DOWN_SPEED = -1d;
 	private static final double UP_SPEED = 0.5d;
 	private static double elevatorEncoderOffset = 0;
 	
@@ -31,6 +31,7 @@ public class Elevator {
 	//difference (total travel) 34.077
 	
 	//vital variables
+	double speed = 0;
 	double targetHeight = 0;
 	State state = State.IDLE;
 	
@@ -57,7 +58,7 @@ public class Elevator {
 	public void setElevatorSpeed(double speed, boolean doLimits) {
 		//doLimits = false; //TODO: DEBUG
 		if (doLimits) {
-			if (getCurrentHeight() >= ELEVATOR_POS_4 && speed > 0) {
+			if (getCurrentHeight() >= ELEVATOR_POS_TOP && speed > 0) {
 				speed = 0;
 			}else if (getCurrentHeight() <= 0 && speed < 0) {
 				speed = 0;
@@ -65,91 +66,109 @@ public class Elevator {
 		}
 		SmartDashboard.putNumber("speed", -speed);
 		speed = -speed; // motors on the robot are inverted
-		leftElevatorMotor.set(speed);
-		rightElevatorMotor.set(speed);
+		if (state == State.RESET) {
+			leftElevatorMotor.set(speed/2);
+			rightElevatorMotor.set(speed/2);
+		}else {
+			leftElevatorMotor.set(speed);
+			rightElevatorMotor.set(speed);
+		}
 	}
 	
 	//sets elevator speed based on target height, always constant, stops if it is at target within tolerance
-	private void updateHeight(double height, boolean doLimits) {
+	private double updateHeight(double height, boolean doLimits) {
 		double current = getCurrentHeight();
 		if (Math.abs(height-current) > TOLERANCE) {
 			if (current > height) {
 				setElevatorSpeed(DOWN_SPEED, doLimits);
+				return DOWN_SPEED;
 			}else {
 				setElevatorSpeed(UP_SPEED, doLimits);
+				return UP_SPEED;
 			}
 		}else {
 			setElevatorSpeed(0, doLimits);
+			return 0;
 		}
 	}
 	
 	//state machine that runs the elevator
 	public void elevatorRun() {// no activity
+		double height = getCurrentHeight();
+		double absError = Math.abs(height-targetHeight);
 		switch (state) {
 		case IDLE:
 			targetHeight = getCurrentHeight();
 			break;
 		case LIFT_INIT_1:
-			targetHeight = ELEVATOR_POS_2;
+			targetHeight = ELEVATOR_POS_GRAB_TOTE;
 			state = State.LIFT_WAIT_DOWN_1;
+			break;
 		case LIFT_WAIT_DOWN_1:
-			if (Math.abs(getCurrentHeight()-targetHeight) < TOLERANCE) {
-				targetHeight = ELEVATOR_POS_4;
+			if (absError < TOLERANCE) {
+				targetHeight = ELEVATOR_POS_TOP;
 				state = State.LIFT_WAIT_UP_1;
 			}
 			break;
 		case LIFT_WAIT_UP_1:
-			if (Math.abs(getCurrentHeight()-targetHeight) < TOLERANCE) {
+			if (absError < TOLERANCE) {
 				state = State.IDLE;
 			}
 			break;
 		case LIFT_INIT_2:
-			targetHeight = ELEVATOR_POS_1;
+			targetHeight = ELEVATOR_POS_BOTTOM;
 			state = State.LIFT_WAIT_DOWN_1;
+			break;
 		case LIFT_WAIT_DOWN_2:
-			if (Math.abs(getCurrentHeight()-targetHeight) < TOLERANCE) {
+			if (absError < TOLERANCE) {
 				targetHeight = ELEVATOR_POS_3;
 				state = State.LIFT_WAIT_UP_1;
 			}
 			break;
 		case LIFT_WAIT_UP_2:
-			if (Math.abs(getCurrentHeight()-targetHeight) < TOLERANCE) {
+			if (absError < TOLERANCE) {
 				state = State.IDLE;
 			}
 			break;
 		case LOWER_INIT:
-			targetHeight = ELEVATOR_POS_1;
+			targetHeight = ELEVATOR_POS_BOTTOM;
 			state = State.LOWER_WAIT_DOWN;
+			break;
 		case LOWER_WAIT_DOWN:
-			if (Math.abs(getCurrentHeight()-targetHeight) < TOLERANCE) {
+			if (absError < TOLERANCE) {
 				state = State.IDLE;
 			}
 			break;
 		case RESET:
-			if (Math.abs(getCurrentHeight()-targetHeight) < TOLERANCE) {
-				targetHeight = ELEVATOR_POS_1;
+			if (absError < TOLERANCE) {
+				targetHeight = ELEVATOR_POS_BOTTOM;
 				elevatorEncoderOffset = 0;
-				state = State.LIFT_WAIT_UP_1;
+				state = State.IDLE;
+				targetHeight = ELEVATOR_POS_TOP;
 			}
 			if (!limitSwitch1.get()/* || !limitSwitch2.get()*/) {
 				elevatorEncoder.reset();
-				targetHeight = ELEVATOR_POS_1;
-				state = State.LIFT_WAIT_UP_1;
+				targetHeight = ELEVATOR_POS_BOTTOM;
+				state = State.IDLE;
+				targetHeight = ELEVATOR_POS_TOP;
 			}
 			
 		}
+		SmartDashboard.putBoolean("trueOrFalse", absError<TOLERANCE);
 		SmartDashboard.putNumber("target", targetHeight);
-		updateHeight(targetHeight, state != State.RESET);
+		SmartDashboard.putNumber("difference", absError);
+		SmartDashboard.putNumber("tolerance", TOLERANCE);
+		speed = updateHeight(targetHeight, state != State.RESET);
 	}
 	
 	//resets the height to 0
 	public void zeroElevator() {
-		targetHeight = -1.2 * ELEVATOR_POS_4;
+		targetHeight = -1.2 * ELEVATOR_POS_TOP;
     	state = State.RESET;
 	}
 	
 	//lifts the elevator to tote height
-	public void liftStackUpper() {
+	public void intakeTote() {
 		state = State.LIFT_INIT_1;
 	}
 	
@@ -158,7 +177,7 @@ public class Elevator {
 	}
 	
 	//lowers the elevator to 0
-	public void lowerStack() {
+	public void gotoBottom() {
 		state = State.LOWER_INIT;
 	}
 

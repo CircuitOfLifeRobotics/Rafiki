@@ -37,7 +37,7 @@ public class OI {
     	rightArmBtn = new AwesomeButton(driverXbox, 5, AwesomeButton.ButtonType.RAW);
     	leftArmBtn = new AwesomeButton(driverXbox, 6, AwesomeButton.ButtonType.RAW);
     	
-    	turboBtn = new AwesomeButton(driverXbox, 10, AwesomeButton.ButtonType.TOGGLE);
+    	turboBtn = new AwesomeButton(driverXbox, 10, AwesomeButton.ButtonType.RAW);
 	}
 	
 }

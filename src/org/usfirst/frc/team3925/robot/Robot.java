@@ -13,21 +13,42 @@
 
 package org.usfirst.frc.team3925.robot;
 
-import static org.usfirst.frc.team3925.robot.RobotMap.*;
+import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_LEFT_ENCODER_A;
+import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_LEFT_ENCODER_B;
+import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_LEFT_MOTOR;
+import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_RIGHT_ENCODER_A;
+import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_RIGHT_ENCODER_B;
+import static org.usfirst.frc.team3925.robot.RobotMap.DRIVE_RIGHT_MOTOR;
+import static org.usfirst.frc.team3925.robot.RobotMap.ELEVATOR_ENCODER_A;
+import static org.usfirst.frc.team3925.robot.RobotMap.ELEVATOR_ENCODER_B;
+import static org.usfirst.frc.team3925.robot.RobotMap.ELEVATOR_LEFT_TALON;
+import static org.usfirst.frc.team3925.robot.RobotMap.ELEVATOR_RIGHT_TALON;
+import static org.usfirst.frc.team3925.robot.RobotMap.ELEVATOR_SWITCH_1;
+import static org.usfirst.frc.team3925.robot.RobotMap.ELEVATOR_SWITCH_2;
+import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_ROLLER;
+import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_SOLENOID_LEFT_A;
+import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_SOLENOID_LEFT_B;
+import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_SOLENOID_RIGHT_A;
+import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_SOLENOID_RIGHT_B;
+import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_VICTOR_LOWER_LEFT;
+import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_VICTOR_LOWER_RIGHT;
+import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_VICTOR_UPPER_LEFT;
+import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_VICTOR_UPPER_RIGHT;
+import static org.usfirst.frc.team3925.robot.RobotMap.RANGE_FINDER_STATION;
+import static org.usfirst.frc.team3925.robot.RobotMap.RANGE_FINDER_TOTE;
 
+import org.usfirst.frc.team3925.robot.command.CommandListExecutor;
+import org.usfirst.frc.team3925.robot.command.DriveDistance;
+import org.usfirst.frc.team3925.robot.command.Wait;
 import org.usfirst.frc.team3925.robot.subsystem.ArmPnuematics;
 import org.usfirst.frc.team3925.robot.subsystem.Drive;
 import org.usfirst.frc.team3925.robot.subsystem.Elevator;
 import org.usfirst.frc.team3925.robot.subsystem.IntakeArms;
 import org.usfirst.frc.team3925.robot.subsystem.Rollers;
 import org.usfirst.frc.team3925.robot.subsystem.ToteRangeFinder;
-import org.usfirst.frc.team3925.robot.util.AwesomeButton;
-import org.usfirst.frc.team3925.robot.util.Button;
 import org.usfirst.frc.team3925.robot.util.Rumble;
-import org.usfirst.frc.team3925.robot.util.ToggleButton;
 
 import edu.wpi.first.wpilibj.IterativeRobot;
-import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -55,15 +76,14 @@ public class Robot extends IterativeRobot {
 	ToteRangeFinder toteRangeFinder;
 	ToteRangeFinder feederStationToteFinder;
 	
+	DriveDistance forwardAutonomous;
+	CommandListExecutor<Drive> autonomousDrive;
+	
 	OI oi;
 	
 	private final double DEADZONE = 0.1;
-	double leftDistanceDriven;
-	double rightDistanceDriven;
-	double leftSpeed;
-	double rightSpeed;
 	
-	private static double LOW_GEAR_COEFFICIENT = 0.8;
+	private static double LOW_GEAR_COEFFICIENT = 0.45;
 	private static double HIGH_GEAR_COEFFICIENT = 1;
 	
 	/*
@@ -96,18 +116,23 @@ public class Robot extends IterativeRobot {
     	toteRangeFinder = new ToteRangeFinder(RANGE_FINDER_TOTE);
     	feederStationToteFinder = new ToteRangeFinder(RANGE_FINDER_STATION);
     	
-    	oi = new OI();
+    	forwardAutonomous = new DriveDistance(60, 1);
+    	autonomousDrive = new CommandListExecutor<Drive>(forwardAutonomous);
     	
-    	leftDistanceDriven = 0;
-    	rightDistanceDriven = 0;
+    	oi = new OI();
     }
 
     public void autonomousInit() {
-    	//elevator.zeroElevator();
+    	elevator.zeroElevator();
     	drive.resetLeftEncoder();
     	drive.resetRightEncoder();
     	timer.reset();
     	timer.start();
+    	autonomousDrive.reset();
+    	/*
+    	upperArms.setSpeeds(-1, 1);
+    	lowerArms.setSpeeds(1, -1);
+    	*/
     }
     
     /**
@@ -115,20 +140,52 @@ public class Robot extends IterativeRobot {
      */
     public void autonomousPeriodic() {
     	
-    	if (timer.get() < 3) {
+    	/*
+    	if (timer.get() < 1.5) {
     		drive.setMotorOutputs(0.75, 0.75);
     	} else {
     		drive.setMotorOutputs(0, 0);
     	}
+    	*/
     	
-    	//elevator.elevatorRun();
+    	if (timer.get() < 1.5) {
+    		drive.setMotorOutputs(-0.75, -0.75);
+    	}else if (timer.get() < 3){
+    		drive.setMotorOutputs(-0.4, -0.4);
+    	}else if (timer.get() < 10) {
+    		drive.setMotorOutputs(1, 1);
+    	}else {
+    		drive.setMotorOutputs(0, 0);
+    	}
+    	
+    	if (timer.get() < 1.5) {
+    		arms.setArms(true, true);
+    		upperArms.setSpeeds(-1, 1);
+    		lowerArms.setSpeeds(1, -1);
+    	}else if (timer.get() < 3) {
+    		arms.setArms(false, false);
+    		upperArms.setSpeeds(0, 0);
+    		lowerArms.setSpeeds(0, 0);
+    	}else if (timer.get() < 5) {
+    		arms.setArms(true, true);
+    		upperArms.setSpeeds(0, 0);
+    		lowerArms.setSpeeds(0, 0);
+    	} else {
+    		arms.setArms(true, true);
+    		upperArms.setSpeeds(0, 0);
+    		lowerArms.setSpeeds(0, 0);
+    	}
+    	rollers.setSpeed(1);
+    	
+    	//autonomousDrive.execute(drive);
+    	elevator.elevatorRun();
     }
     
     /**
      * This function is called at the beginning of teleop
      */
     public void teleopInit() {
-    	//elevator.zeroElevator();
+    	elevator.zeroElevator();
     	drive.resetLeftEncoder();
     	drive.resetRightEncoder();
     	
@@ -161,11 +218,11 @@ public class Robot extends IterativeRobot {
 		} else {
 			if (oi.lowerToteBtn.get()) {
 				SmartDashboard.putBoolean("lowerTote", true);
-				elevator.lowerStack();
+				elevator.gotoBottom();
 			}
 			if (oi.liftToteBtn.get()) {
 				SmartDashboard.putBoolean("liftTote", true);
-				elevator.liftStackUpper();
+				elevator.intakeTote();
 			}
 			if (oi.zeroElevatorBtn.get()) {
 				SmartDashboard.putBoolean("zero'd", true);
@@ -183,25 +240,92 @@ public class Robot extends IterativeRobot {
 		SmartDashboard.putNumber("tote range", toteRangeFinder.getVolts());
 		SmartDashboard.putNumber("station range", feederStationToteFinder.getVolts());
 		
+		//rollers
 		double driverRollerSpeed = oi.driverXbox.getRawAxis(2) - oi.driverXbox.getRawAxis(3);
-		double shooterRollerSpeed = oi.shooterXbox.getRawAxis(2) - oi.driverXbox.getRawAxis(3);
-		if (Math.abs(shooterRollerSpeed) > Math.abs(driverRollerSpeed)) {
-			rollers.setSpeed(shooterRollerSpeed);
-		}else {
+		double shooterRollerSpeed = oi.shooterXbox.getRawAxis(2) - oi.shooterXbox.getRawAxis(3);
+		if (Math.abs(driverRollerSpeed) > Math.abs(shooterRollerSpeed)) {
 			rollers.setSpeed(driverRollerSpeed);
+		}else {
+			rollers.setSpeed(shooterRollerSpeed);
 		}
 		
-		double lowerArmSpeed = Math.min(1, (oi.driverXbox.getRawButton(5) ? 1:0) + (oi.driverXbox.getRawButton(6) ? 1:0));
-		double driverUpperArmSpeed = (oi.driverXbox.getRawButton(5) ? 1:0) + (oi.driverXbox.getRawButton(6) ? -1:0);
+		//arms
+		
+		boolean botIn = oi.driverXbox.getRawButton(1);
+		boolean botOut = oi.driverXbox.getRawButton(2);
+		boolean topIn = oi.driverXbox.getRawButton(4);
+		boolean topOut = oi.driverXbox.getRawButton(3);
+
+		boolean driverToteIntake = oi.driverXbox.getRawButton(5);
+		boolean driverContainerIntake = oi.driverXbox.getRawButton(6);
+		
+		boolean shooterTopIn = oi.shooterXbox.getRawButton(6);
+		boolean shooterTopOut = oi.shooterXbox.getRawButton(5);
+		
 		double upperArmSpeed;
-		double shooterUpperArmSpeed = (oi.shooterXbox.getRawButton(5) ? 1:0) + (oi.shooterXbox.getRawButton(6) ? -1:0);
-		if (Math.abs(shooterUpperArmSpeed) > Math.abs(driverUpperArmSpeed)) {
-			upperArmSpeed = shooterUpperArmSpeed;
-		}else {
-			upperArmSpeed = driverUpperArmSpeed;
+		double lowerArmSpeed;
+		boolean leftArm, rightArm;
+		
+		// manual controls
+		if (!(botIn || botOut || topIn || topOut)) {
+			
+			
+			topIn = driverToteIntake || shooterTopIn;
+			topOut = (driverContainerIntake && !driverToteIntake) || shooterTopOut;
+			
+			botIn = driverToteIntake || driverContainerIntake;
+			
 		}
+		
+		if (botIn != botOut) {
+			lowerArmSpeed = botIn ? -1 : 1;
+		} else {
+			lowerArmSpeed = 0;
+		}
+		
+		if (topIn != topOut) {
+			upperArmSpeed = topIn ? -1 : 1;
+		} else {
+			upperArmSpeed = 0;
+		}
+		
+		if (driverContainerIntake || driverToteIntake) {
+			leftArm = rightArm = true;
+		} else {
+			double shooterArmX = oi.shooterXbox.getRawAxis(4);
+			double shooterArmY = oi.shooterXbox.getRawAxis(5);
+			
+			double threshhold = .3;
+			
+			leftArm = shooterArmX > threshhold || shooterArmY > threshhold;
+			rightArm = shooterArmX < -threshhold || shooterArmY > threshhold;
+		}
+		
+//		double driverLowerArmSpeed = Math.min(1, (oi.driverXbox.getRawButton(5) ? 1:0) + (oi.driverXbox.getRawButton(6) ? 1:0));	//if left or right bumper is pressed, lower arms spin inward
+//		double driverUpperArmSpeed = (oi.driverXbox.getRawButton(5) ? 1:0) + (oi.driverXbox.getRawButton(6) ? -1:0);				//if left bumper is pressed, upper arms spin inward, if right, outward
+//		
+//		double manualLowerArmSpeed = (oi.driverXbox.getRawButton(1) ? 1:0) + (oi.driverXbox.getRawButton(2) ? -1:0);				//A and B correspond to out and in for lower arms
+//		double manualUpperArmSpeed = (oi.driverXbox.getRawButton(4) ? 1:0) + (oi.driverXbox.getRawButton(3) ? -1:0);				//Y and X correspond to out and in for upper arms
+//		
+//		double shooterUpperArmSpeed = (oi.shooterXbox.getRawButton(5) ? 1:0) + (oi.shooterXbox.getRawButton(6) ? -1:0);			//if left bumper is pressed, upper arms spin inward, if right
+//		
+//		boolean armState = (oi.driverXbox.getRawButton(5) || oi.driverXbox.getRawButton(6)) ? true:false;							//if either of the bumpers is pressed, arms are in
+//		
+//		if (manualLowerArmSpeed == 0 && manualUpperArmSpeed == 0) {
+//			if (Math.abs(shooterUpperArmSpeed) > Math.abs(driverUpperArmSpeed)) {
+//				upperArmSpeed = shooterUpperArmSpeed;
+//			}else {
+//				upperArmSpeed = driverUpperArmSpeed;
+//			}
+//			lowerArmSpeed = driverLowerArmSpeed;
+//		}else {
+//			upperArmSpeed = manualUpperArmSpeed;
+//			lowerArmSpeed = manualLowerArmSpeed;
+//		}
+		
 		upperArms.setSpeeds(upperArmSpeed, -upperArmSpeed);
-		lowerArms.setSpeeds(lowerArmSpeed, -lowerArmSpeed);
+		lowerArms.setSpeeds(-lowerArmSpeed, lowerArmSpeed);
+		arms.setArms(leftArm, rightArm);
 		
 		/*
 		if (manualIntakeToggle.get()) {
@@ -253,6 +377,7 @@ public class Robot extends IterativeRobot {
     @Override
     public void disabledInit() {
     	drive.drive(0, 0, LOW_GEAR_COEFFICIENT);
+    	elevator.idle();
     }
     
     @Override

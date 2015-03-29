@@ -2,6 +2,8 @@ package org.usfirst.frc.team3925.robot.command;
 
 import org.usfirst.frc.team3925.robot.subsystem.Drive;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
 public class DriveDistance implements Command<Drive> {
 
 	public static final double TOLERANCE = 3;
@@ -29,6 +31,8 @@ public class DriveDistance implements Command<Drive> {
 		} else{
 			drive.setMotorOutputs(-speed, -speed);
 		}
+		SmartDashboard.putNumber("distance", currentDistance);
+		SmartDashboard.putNumber("target", targetDistance);
 	}
 
 	public double getDistance(Drive drive) {
