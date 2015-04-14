@@ -140,42 +140,42 @@ public class Robot extends IterativeRobot {
      */
     public void autonomousPeriodic() {
     	
-    	/*
     	if (timer.get() < 1.5) {
     		drive.setMotorOutputs(0.75, 0.75);
     	} else {
     		drive.setMotorOutputs(0, 0);
     	}
-    	*/
     	
-    	if (timer.get() < 1.5) {
+    	/*
+    	if (timer.get() < 0.7+5) {}else if (timer.get() < 3+5) {
     		drive.setMotorOutputs(-0.75, -0.75);
-    	}else if (timer.get() < 3){
+    	}else if (timer.get() < 4+5){
     		drive.setMotorOutputs(-0.4, -0.4);
-    	}else if (timer.get() < 10) {
+    	}else if (timer.get() < 7+5) {
     		drive.setMotorOutputs(1, 1);
     	}else {
     		drive.setMotorOutputs(0, 0);
     	}
     	
-    	if (timer.get() < 1.5) {
+    	if (timer.get() < 3+5 && timer.get() > 5) {
     		arms.setArms(true, true);
     		upperArms.setSpeeds(-1, 1);
     		lowerArms.setSpeeds(1, -1);
-    	}else if (timer.get() < 3) {
+    	}else if (timer.get() < 4+5) {
     		arms.setArms(false, false);
     		upperArms.setSpeeds(0, 0);
     		lowerArms.setSpeeds(0, 0);
-    	}else if (timer.get() < 5) {
+    	}else if (timer.get() < 6.5+5) {
     		arms.setArms(true, true);
     		upperArms.setSpeeds(0, 0);
     		lowerArms.setSpeeds(0, 0);
-    	} else {
+    	} else if (timer.get() > 5) {
     		arms.setArms(true, true);
     		upperArms.setSpeeds(0, 0);
     		lowerArms.setSpeeds(0, 0);
     	}
     	rollers.setSpeed(1);
+    	*/
     	
     	//autonomousDrive.execute(drive);
     	elevator.elevatorRun();

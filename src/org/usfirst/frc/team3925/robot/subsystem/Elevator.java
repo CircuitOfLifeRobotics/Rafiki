@@ -23,7 +23,7 @@ public class Elevator {
 	private static final double ELEVATOR_POS_TOP = 32;
 	private static final double TOLERANCE = 1d;
 	private static final double DOWN_SPEED = -1d;
-	private static final double UP_SPEED = 0.5d;
+	private static final double UP_SPEED = 1d;
 	private static double elevatorEncoderOffset = 0;
 	
 	//min (bottom) 19.672
