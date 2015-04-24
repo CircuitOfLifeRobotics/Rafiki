@@ -31,8 +31,10 @@ public final class RobotMap {
 			
 			INTAKE_ROLLER = 4,				//Not checked
 			
-			RANGE_FINDER_TOTE = 0,			//Not checked
-			RANGE_FINDER_STATION = 1,		//Not checked
+			GYRO = 0,
+			
+			RANGE_FINDER_TOTE = 3,			//Not checked
+			RANGE_FINDER_STATION = 2,		//Not checked
 			
 			JOYSTICK_XBOX_DRIVER = 0,
 			JOYSTICK_XBOX_SHOOTER = 1;

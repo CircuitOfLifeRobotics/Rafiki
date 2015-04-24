@@ -27,9 +27,9 @@ public class DriveDistance implements Command<Drive> {
 	public void execute(Drive drive) {
 		currentDistance = getDistance(drive);
 		if (currentDistance < targetDistance) {
-			drive.setMotorOutputs(speed, speed);
-		} else{
 			drive.setMotorOutputs(-speed, -speed);
+		} else{
+			drive.setMotorOutputs(speed, speed);
 		}
 		SmartDashboard.putNumber("distance", currentDistance);
 		SmartDashboard.putNumber("target", targetDistance);
@@ -41,6 +41,7 @@ public class DriveDistance implements Command<Drive> {
 	
 	@Override
 	public boolean finished(Drive sub) {
+		SmartDashboard.putNumber("drivedist", Math.abs(currentDistance - targetDistance));
 		return Math.abs(currentDistance - targetDistance) < TOLERANCE;
 	}
 

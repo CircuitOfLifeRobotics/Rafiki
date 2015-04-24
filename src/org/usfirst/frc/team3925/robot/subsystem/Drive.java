@@ -8,11 +8,13 @@ public class Drive {
 	public static final double WHEELBASE_SIZE = 27; // inches
 	
 	RobotDrive drive;
+	Gyroscope gyro;
 	Encoder leftEncoder;
 	Encoder rightEncoder;
 	
-	public Drive(int leftmotorport, int rightmotorport, int leftencoderportA, int leftencoderportB, int rightencoderportA, int rightencoderportB) {
+	public Drive(int leftmotorport, int rightmotorport, int leftencoderportA, int leftencoderportB, int rightencoderportA, int rightencoderportB, int gyroPort) {
 		drive = new RobotDrive(leftmotorport, rightmotorport);
+		gyro = new Gyroscope(gyroPort);
 		leftEncoder = new Encoder(leftencoderportA, leftencoderportB);
 		rightEncoder = new Encoder(rightencoderportA, rightencoderportB);
 		leftEncoder.setDistancePerPulse(120/9127d);
@@ -27,6 +29,14 @@ public class Drive {
 		drive.setMaxOutput(maxOutput);
 		
 		drive.arcadeDrive(fwd, turn);
+	}
+	
+	public void resetGyro() {
+		gyro.reset();
+	}
+	
+	public void initGyro() {
+		gyro.initGyro();
 	}
 	
 	public void setMotorOutputs(double leftSpeed, double rightSpeed) {
@@ -47,5 +57,9 @@ public class Drive {
 	
 	public void resetRightEncoder() {
 		rightEncoder.reset();
+	}
+
+	public double getAngle() {
+		return gyro.getAngle();
 	}
 }

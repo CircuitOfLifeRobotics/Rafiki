@@ -25,6 +25,7 @@ import static org.usfirst.frc.team3925.robot.RobotMap.ELEVATOR_LEFT_TALON;
 import static org.usfirst.frc.team3925.robot.RobotMap.ELEVATOR_RIGHT_TALON;
 import static org.usfirst.frc.team3925.robot.RobotMap.ELEVATOR_SWITCH_1;
 import static org.usfirst.frc.team3925.robot.RobotMap.ELEVATOR_SWITCH_2;
+import static org.usfirst.frc.team3925.robot.RobotMap.GYRO;
 import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_ROLLER;
 import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_SOLENOID_LEFT_A;
 import static org.usfirst.frc.team3925.robot.RobotMap.INTAKE_SOLENOID_LEFT_B;
@@ -39,10 +40,11 @@ import static org.usfirst.frc.team3925.robot.RobotMap.RANGE_FINDER_TOTE;
 
 import org.usfirst.frc.team3925.robot.command.CommandListExecutor;
 import org.usfirst.frc.team3925.robot.command.DriveDistance;
-import org.usfirst.frc.team3925.robot.command.Wait;
+import org.usfirst.frc.team3925.robot.command.TurnGyro;
 import org.usfirst.frc.team3925.robot.subsystem.ArmPnuematics;
 import org.usfirst.frc.team3925.robot.subsystem.Drive;
 import org.usfirst.frc.team3925.robot.subsystem.Elevator;
+import org.usfirst.frc.team3925.robot.subsystem.Gyroscope;
 import org.usfirst.frc.team3925.robot.subsystem.IntakeArms;
 import org.usfirst.frc.team3925.robot.subsystem.Rollers;
 import org.usfirst.frc.team3925.robot.subsystem.ToteRangeFinder;
@@ -61,10 +63,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  */
 public class Robot extends IterativeRobot {
 	
-	int wait = 0;
-	
-	public static final double AUTONOMOUS_DISTANCE = 50;
-	
 	Timer timer;
 	Drive drive;
 	Elevator elevator;
@@ -77,28 +75,18 @@ public class Robot extends IterativeRobot {
 	ToteRangeFinder feederStationToteFinder;
 	
 	DriveDistance forwardAutonomous;
+	TurnGyro turn;
+	
 	CommandListExecutor<Drive> autonomousDrive;
 	
 	OI oi;
+	
+	public static final double AUTONOMOUS_DISTANCE = 50;
 	
 	private final double DEADZONE = 0.1;
 	
 	private static double LOW_GEAR_COEFFICIENT = 0.45;
 	private static double HIGH_GEAR_COEFFICIENT = 1;
-	
-	/*
-	 * ShooterXbox:
-	 * elevator position 1:		A (1)
-	 * elevator position 2:		B (2)
-	 * elevator position 3:		X (3)
-	 * elevator position 4:		Y (4)
-	 * 
-	 * tote in initialize:		RT (5)
-	 * tote in sequence:		LT (analog 2)
-	 * 
-	 * tote out initialize:		LT (6)
-	 * tote out rollers:		RT (analog 3)
-	 */
 	
     /**
      * This function is run when the robot is first started up and should be
@@ -107,7 +95,7 @@ public class Robot extends IterativeRobot {
     public void robotInit() {
     	
     	timer = new Timer();
-    	drive = new Drive(DRIVE_LEFT_MOTOR, DRIVE_RIGHT_MOTOR, DRIVE_LEFT_ENCODER_A, DRIVE_LEFT_ENCODER_B, DRIVE_RIGHT_ENCODER_A, DRIVE_RIGHT_ENCODER_B);
+    	drive = new Drive(DRIVE_LEFT_MOTOR, DRIVE_RIGHT_MOTOR, DRIVE_LEFT_ENCODER_A, DRIVE_LEFT_ENCODER_B, DRIVE_RIGHT_ENCODER_A, DRIVE_RIGHT_ENCODER_B, GYRO);
     	elevator = new Elevator(ELEVATOR_LEFT_TALON, ELEVATOR_RIGHT_TALON, ELEVATOR_ENCODER_A, ELEVATOR_ENCODER_B, ELEVATOR_SWITCH_1, ELEVATOR_SWITCH_2);
     	rollers = new Rollers(INTAKE_ROLLER);
     	upperArms = new IntakeArms(INTAKE_VICTOR_UPPER_LEFT, INTAKE_VICTOR_UPPER_RIGHT);
@@ -117,7 +105,10 @@ public class Robot extends IterativeRobot {
     	feederStationToteFinder = new ToteRangeFinder(RANGE_FINDER_STATION);
     	
     	forwardAutonomous = new DriveDistance(60, 1);
-    	autonomousDrive = new CommandListExecutor<Drive>(forwardAutonomous);
+    	turn = new TurnGyro(0.5, 360, 90);
+    	autonomousDrive = new CommandListExecutor<Drive>(forwardAutonomous, turn);
+    	
+    	drive.initGyro();
     	
     	oi = new OI();
     }
@@ -140,11 +131,15 @@ public class Robot extends IterativeRobot {
      */
     public void autonomousPeriodic() {
     	
+    	autonomousDrive.execute(drive);
+    	
+    	/*
     	if (timer.get() < 1.5) {
     		drive.setMotorOutputs(0.75, 0.75);
     	} else {
     		drive.setMotorOutputs(0, 0);
     	}
+    	//*/
     	
     	/*
     	if (timer.get() < 0.7+5) {}else if (timer.get() < 3+5) {
@@ -201,6 +196,7 @@ public class Robot extends IterativeRobot {
 		SmartDashboard.putNumber("elevator height", elevator.getCurrentHeight());
     	elevatorPeriodic();
     	intakePeriodic();
+    	SmartDashboard.putNumber("Gyro", drive.getAngle());
     	
     }
     
