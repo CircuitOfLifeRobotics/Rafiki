@@ -104,8 +104,8 @@ public class Robot extends IterativeRobot {
     	toteRangeFinder = new ToteRangeFinder(RANGE_FINDER_TOTE);
     	feederStationToteFinder = new ToteRangeFinder(RANGE_FINDER_STATION);
     	
-    	forwardAutonomous = new DriveDistance(60, 1);
-    	turn = new TurnGyro(0.5, 360, 90);
+    	forwardAutonomous = new DriveDistance(20, 1);
+    	turn = new TurnGyro(0.5, 360, 15);
     	autonomousDrive = new CommandListExecutor<Drive>(forwardAutonomous, turn);
     	
     	drive.initGyro();
